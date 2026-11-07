@@ -60,9 +60,17 @@
     <script>
         // Tắt bật Dark/Light mode
         function toggleTheme() {
-            const html = document.documentElement;
-            html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
-        }
+    const html = document.documentElement;
+    const logo = document.getElementById('mainLogo');
+    
+    if (html.getAttribute('data-theme') === 'light') {
+        html.setAttribute('data-theme', 'dark');
+        if (logo) logo.src = 'logodark.svg'; // Chuyển sang logo tối
+    } else {
+        html.setAttribute('data-theme', 'light');
+        if (logo) logo.src = 'logo.svg'; // Chuyển về logo sáng
+    }
+}
 
         document.getElementById('bookingForm').addEventListener('submit', function(e) {
             e.preventDefault();
