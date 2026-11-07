@@ -36,16 +36,16 @@
         input:checked + .slider { background-color: var(--primary); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* BẢNG QUẢN TRỊ */
-        .admin-container { padding: 30px 40px; }
-        .table-responsive { width: 100%; overflow-x: auto; background: var(--card-bg); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; white-space: nowrap; }
-        th, td { padding: 15px; border-bottom: 1px solid var(--border); text-align: left; font-size: 14px; }
-        th { background-color: var(--primary); color: #fff; font-weight: 700; }
+        /* BẢNG QUẢN TRỊ (DESKTOP) */
+        .admin-container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; } /* Giới hạn chiều rộng để không bị tràn trên màn hình lớn */
+        .table-responsive { width: 100%; background: var(--card-bg); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 15px 20px; border-bottom: 1px solid var(--border); text-align: left; font-size: 14px; line-height: 1.5; vertical-align: middle;}
+        th { background-color: var(--primary); color: #fff; font-weight: 700; white-space: nowrap; }
         tr:hover { background-color: rgba(0,0,0,0.02); }
         [data-theme="dark"] tr:hover { background-color: rgba(255,255,255,0.05); }
         
-        .badge-late { background-color: var(--danger); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .badge-late { background-color: var(--danger); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block;}
         
         /* NÚT BẤM */
         .btn { padding: 8px 15px; border-radius: 6px; border: none; font-weight: 700; font-family: 'Manrope', sans-serif; cursor: pointer; transition: 0.2s; font-size: 13px; display: inline-block;}
@@ -57,7 +57,40 @@
         .btn-cam { background-color: var(--primary); color: white; }
         .btn-success { background-color: var(--success); color: white; }
 
-        /* MODAL POPUP */
+        /* BẢNG QUẢN TRỊ (MOBILE - CARD LAYOUT) */
+        @media (max-width: 768px) {
+            .admin-header { padding: 15px; flex-direction: column; align-items: flex-start; }
+            .theme-switch-wrapper { align-self: flex-end; margin-top: -30px; }
+            .admin-container { padding: 15px; }
+            
+            /* Ép bảng thành dạng khối để bỏ thanh cuộn ngang */
+            table, thead, tbody, th, td, tr { display: block; }
+            thead tr { position: absolute; top: -9999px; left: -9999px; } /* Ẩn tiêu đề cột */
+            
+            tr { margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--card-bg); box-shadow: 0 4px 10px rgba(0,0,0,0.03);}
+            
+            td { position: relative; padding: 12px 15px 12px 45%; text-align: right; border-bottom: 1px solid var(--border); min-height: 45px; display: flex; flex-direction: column; justify-content: center; align-items: flex-end;}
+            td:last-child { border-bottom: 0; align-items: center; padding: 15px; }
+            
+            /* Dùng thuộc tính data-label trong HTML để hiển thị tiêu đề bên trái */
+            td::before { 
+                content: attr(data-label); 
+                position: absolute; 
+                left: 15px; 
+                width: 35%; 
+                text-align: left; 
+                font-weight: 700; 
+                color: var(--primary); 
+                top: 50%; 
+                transform: translateY(-50%); 
+                font-size: 13px;
+            }
+            td:last-child::before { display: none; } /* Ẩn label ở ô nút bấm */
+            
+            .btn { width: 100%; text-align: center; }
+        }
+
+        /* MODAL POPUP & CAMERA */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
         .modal-box { background: var(--card-bg); width: 100%; max-width: 450px; padding: 30px; border-radius: 12px; position: relative; max-height: 90vh; overflow-y: auto; }
         .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: var(--text-main); font-weight: bold;}
@@ -67,17 +100,9 @@
         .form-select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Manrope', sans-serif; font-size: 14px; background: transparent; color: var(--text-main); }
         .form-select option { color: #111; }
 
-        /* CAMERA */
         .camera-box { position: relative; width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 8px; overflow: hidden; display: none; margin-top: 15px; }
         #webcamVideo { width: 100%; height: 100%; object-fit: cover; }
         #resultImage { width: 100%; display: none; border-radius: 8px; margin-top: 15px; }
-
-        @media (max-width: 768px) {
-            .admin-header { padding: 15px 20px; flex-direction: column; align-items: flex-start; }
-            .theme-switch-wrapper { align-self: flex-end; }
-            .admin-container { padding: 15px; }
-            .modal-box { padding: 20px; }
-        }
     </style>
 </head>
 <body>
@@ -114,17 +139,18 @@
                     </tr>
                 </thead>
                 <tbody id="dataTableBody">
+                    <!-- Bổ sung thuộc tính data-label vào từng thẻ td để phục vụ giao diện mobile -->
                     <tr>
-                        <td>10:15 - 08/11/2026</td>
-                        <td>14:30 - 08/11/2026</td>
-                        <td>
+                        <td data-label="Thời gian gửi đơn">10:15 - 08/11/2026</td>
+                        <td data-label="Thời gian dự kiến">14:30 - 08/11/2026</td>
+                        <td data-label="NVKD">
                             <strong>Nguyễn Văn A</strong><br>
                             <small>Phòng: Khối 1</small><br>
                             <small>SĐT: 0987654321</small>
                         </td>
-                        <td>Khách: 2 | Tổng: 3</td>
-                        <td><span class="badge-late">Đăng ký gấp (<50p)</span></td>
-                        <td id="action-cell-ID_001">
+                        <td data-label="Thông tin khách">Khách: 2 | Tổng: 3</td>
+                        <td data-label="Lưu ý"><span class="badge-late">Đăng ký gấp (<50p)</span></td>
+                        <td data-label="Thao tác Lễ tân" id="action-cell-ID_001">
                             <button class="btn btn-checkin" id="btn-in-ID_001" onclick="openCheckInModal('ID_001', 'Nguyễn Văn A')">Khách đến (Check-in)</button>
                             <button class="btn btn-checkout" id="btn-out-ID_001" onclick="confirmCheckOut('ID_001', 'Nguyễn Văn A')">Khách về (Check-out)</button>
                         </td>
@@ -134,7 +160,6 @@
         </div>
     </div>
 
-    <!-- POPUP CHECK-IN BƯỚC 1 & BƯỚC 2 -->
     <div class="modal-overlay" id="checkInModal">
         <div class="modal-box">
             <span class="close-btn" onclick="closeModal()">&times;</span>
@@ -278,13 +303,10 @@
         function submitCheckIn() {
             document.getElementById('btnSubmitCheckIn').innerText = "Đang lưu trữ dữ liệu...";
             
-            // Xử lý gửi Data lên Backend (Giữ chỗ)
-            
             setTimeout(() => {
                 alert("Đã lưu Check-in thành công!");
                 closeModal();
                 
-                // Ẩn nút Check-in và hiện nút Check-out của hàng tương ứng
                 document.getElementById('btn-in-' + currentRecordId).style.display = 'none';
                 document.getElementById('btn-out-' + currentRecordId).style.display = 'inline-block';
             }, 1000);
@@ -292,7 +314,6 @@
 
         function confirmCheckOut(id, saleName) {
             if(confirm("Xác nhận Sale " + saleName + " và khách đã ra về?")) {
-                // Xử lý gửi Data Checkout lên Backend (Giữ chỗ)
                 alert("Ghi nhận Check-out thành công!");
                 document.getElementById('btn-out-' + id).style.display = 'none';
             }
