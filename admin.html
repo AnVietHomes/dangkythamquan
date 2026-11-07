@@ -18,7 +18,7 @@
         }
         
         * { box-sizing: border-box; }
-        body { background-color: var(--bg-color); font-family: 'Manrope', sans-serif; color: var(--text-main); margin: 0; padding: 0; transition: 0.3s; }
+        body { background-color: var(--bg-color); font-family: 'Manrope', sans-serif; color: var(--text-main); margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
         
         /* HEADER ADMIN */
         .admin-header { background: var(--card-bg); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px;}
@@ -49,9 +49,9 @@
         
         /* NÚT BẤM */
         .btn { padding: 8px 15px; border-radius: 6px; border: none; font-weight: 700; font-family: 'Manrope', sans-serif; cursor: pointer; transition: 0.2s; font-size: 13px; display: inline-block;}
-        .btn-checkin { background-color: var(--primary); color: white; margin-right: 5px; }
+        .btn-checkin { background-color: var(--primary); color: white; }
         .btn-checkin:hover { background-color: var(--primary-hover); }
-        .btn-checkout { background-color: var(--warning); color: #111; }
+        .btn-checkout { background-color: var(--warning); color: #111; display: none; }
         
         .btn-full { width: 100%; padding: 12px; margin-top: 15px; font-size: 15px; }
         .btn-cam { background-color: var(--primary); color: white; }
@@ -72,7 +72,6 @@
         #webcamVideo { width: 100%; height: 100%; object-fit: cover; }
         #resultImage { width: 100%; display: none; border-radius: 8px; margin-top: 15px; }
 
-        /* MOBILE RESPONSIVE */
         @media (max-width: 768px) {
             .admin-header { padding: 15px 20px; flex-direction: column; align-items: flex-start; }
             .theme-switch-wrapper { align-self: flex-end; }
@@ -94,7 +93,7 @@
         <div class="theme-switch-wrapper">
             <span>Sáng</span>
             <label class="switch">
-                <input type="checkbox" id="themeToggle" onchange="toggleAdminTheme()">
+                <input type="checkbox" id="themeToggleAdmin">
                 <span class="slider"></span>
             </label>
             <span>Tối</span>
@@ -106,6 +105,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th>Thời gian gửi đơn</th>
                         <th>Thời gian dự kiến</th>
                         <th>NVKD</th>
                         <th>Thông tin khách</th>
@@ -115,13 +115,18 @@
                 </thead>
                 <tbody id="dataTableBody">
                     <tr>
+                        <td>10:15 - 08/11/2026</td>
                         <td>14:30 - 08/11/2026</td>
-                        <td><strong>Nguyễn Văn A</strong><br><small>0987654321</small></td>
+                        <td>
+                            <strong>Nguyễn Văn A</strong><br>
+                            <small>Phòng: Khối 1</small><br>
+                            <small>SĐT: 0987654321</small>
+                        </td>
                         <td>Khách: 2 | Tổng: 3</td>
                         <td><span class="badge-late">Đăng ký gấp (<50p)</span></td>
-                        <td>
-                            <button class="btn btn-checkin" onclick="openCheckInModal('ID_001', 'Nguyễn Văn A')">Khách đến (Check-in)</button>
-                            <button class="btn btn-checkout" disabled>Khách về (Check-out)</button>
+                        <td id="action-cell-ID_001">
+                            <button class="btn btn-checkin" id="btn-in-ID_001" onclick="openCheckInModal('ID_001', 'Nguyễn Văn A')">Khách đến (Check-in)</button>
+                            <button class="btn btn-checkout" id="btn-out-ID_001" onclick="confirmCheckOut('ID_001', 'Nguyễn Văn A')">Khách về (Check-out)</button>
                         </td>
                     </tr>
                 </tbody>
@@ -140,59 +145,56 @@
                 <div class="form-group">
                     <label>1. Số lượng Sale đến dự án:</label>
                     <select class="form-select" id="saleStatus">
-                        <option value="Đủ">✅ Đủ so với đăng ký</option>
-                        <option value="Không đủ">❌ Không đủ / Sai lệch</option>
+                        <option value="Đủ">Đủ so với đăng ký</option>
+                        <option value="Không đủ">Không đủ / Sai lệch</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
                     <label>2. Số lượng Khách hàng đến dự án:</label>
                     <select class="form-select" id="guestStatus">
-                        <option value="Đủ">✅ Đủ so với đăng ký</option>
-                        <option value="Không đủ">❌ Không đủ / Sai lệch</option>
+                        <option value="Đủ">Đủ so với đăng ký</option>
+                        <option value="Không đủ">Không đủ / Sai lệch</option>
                     </select>
                 </div>
                 
-                <!-- BƯỚC 1: Ấn nút này mới mở Camera -->
-                <button type="button" class="btn btn-full btn-cam" id="btnOpenCamera" onclick="startCamera()">📸 CHỤP ẢNH XÁC NHẬN</button>
+                <button type="button" class="btn btn-full btn-cam" id="btnOpenCamera" onclick="startCamera()">CHỤP ẢNH XÁC NHẬN</button>
             </div>
             
-            <!-- BƯỚC 2: KHUNG CAMERA (Ẩn mặc định) -->
             <div class="camera-box" id="cameraBox">
                 <video id="webcamVideo" autoplay playsinline></video>
-                <button type="button" class="btn btn-full btn-danger" style="background:#dc3545; color:#fff; position:absolute; bottom:10px; width:90%; left:5%;" onclick="takeSnapshot()">🔴 CHỤP NGAY</button>
+                <button type="button" class="btn btn-full btn-danger" style="background:#dc3545; color:#fff; position:absolute; bottom:10px; width:90%; left:5%;" onclick="takeSnapshot()">CHỤP NGAY</button>
             </div>
             
             <canvas id="snapshotCanvas" style="display:none;"></canvas>
             <img id="resultImage" alt="Ảnh minh chứng">
             
-            <button type="button" class="btn btn-full btn-success" id="btnSubmitCheckIn" style="display:none;" onclick="submitCheckIn()">✅ XÁC NHẬN & LƯU HỆ THỐNG</button>
+            <button type="button" class="btn btn-full btn-success" id="btnSubmitCheckIn" style="display:none;" onclick="submitCheckIn()">XÁC NHẬN VÀ LƯU HỆ THỐNG</button>
         </div>
     </div>
 
     <script>
-        // Xử lý Giao diện Tối/Sáng
-        function toggleAdminTheme() {
+        document.getElementById('themeToggleAdmin').addEventListener('change', function() {
             const html = document.documentElement;
             const logo = document.getElementById('adminLogo');
-            const isDark = document.getElementById('themeToggle').checked;
             
-            if (isDark) {
+            if (this.checked) {
                 html.setAttribute('data-theme', 'dark');
-                logo.src = 'logodark.svg';
+                if (logo) logo.src = 'logodark.svg';
             } else {
                 html.setAttribute('data-theme', 'light');
-                logo.src = 'logo.svg';
+                if (logo) logo.src = 'logo.svg';
             }
-        }
+        });
 
+        let currentRecordId = '';
         let mediaStream = null;
         let finalProcessedDataUrl = "";
 
         function openCheckInModal(id, saleName) {
+            currentRecordId = id;
             document.getElementById('modalSaleName').innerText = saleName;
             
-            // Khôi phục lại trạng thái ban đầu của Popup
             document.getElementById('step1-form').style.display = 'block';
             document.getElementById('btnOpenCamera').style.display = 'block';
             document.getElementById('cameraBox').style.display = 'none';
@@ -207,7 +209,6 @@
             if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
         }
 
-        // Mở Camera
         function startCamera() {
             document.getElementById('btnOpenCamera').style.display = 'none';
             document.getElementById('cameraBox').style.display = 'block';
@@ -220,7 +221,6 @@
             }).catch(err => alert("Vui lòng cấp quyền mở Camera cho trình duyệt!"));
         }
 
-        // Chụp ảnh & Ghép Timemark
         function takeSnapshot() {
             const videoElement = document.getElementById('webcamVideo');
             const canvas = document.getElementById('snapshotCanvas');
@@ -265,7 +265,7 @@
         function finishPhotoProcessing(canvas) {
             mediaStream.getTracks().forEach(track => track.stop());
             document.getElementById('cameraBox').style.display = 'none';
-            document.getElementById('step1-form').style.display = 'none'; // Ẩn luôn form chọn để gọn
+            document.getElementById('step1-form').style.display = 'none'; 
             
             finalProcessedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
             const resultImg = document.getElementById('resultImage');
@@ -276,15 +276,26 @@
         }
 
         function submitCheckIn() {
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyE1t53Uq6B12d2QUgn2t8wvJuL4_o2MOFHZzaIKjDFH5_3tQb341RcRJpNaBueczDPwQ/exec'; 
             document.getElementById('btnSubmitCheckIn').innerText = "Đang lưu trữ dữ liệu...";
             
-            // Ở đây sau này sẽ thực hiện hàm POST đẩy ảnh Base64 lên Google Script
+            // Xử lý gửi Data lên Backend (Giữ chỗ)
             
             setTimeout(() => {
                 alert("Đã lưu Check-in thành công!");
                 closeModal();
+                
+                // Ẩn nút Check-in và hiện nút Check-out của hàng tương ứng
+                document.getElementById('btn-in-' + currentRecordId).style.display = 'none';
+                document.getElementById('btn-out-' + currentRecordId).style.display = 'inline-block';
             }, 1000);
+        }
+
+        function confirmCheckOut(id, saleName) {
+            if(confirm("Xác nhận Sale " + saleName + " và khách đã ra về?")) {
+                // Xử lý gửi Data Checkout lên Backend (Giữ chỗ)
+                alert("Ghi nhận Check-out thành công!");
+                document.getElementById('btn-out-' + id).style.display = 'none';
+            }
         }
     </script>
 </body>
