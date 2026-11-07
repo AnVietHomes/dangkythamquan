@@ -18,7 +18,7 @@
         }
         
         * { box-sizing: border-box; }
-        body { background-color: var(--bg-color); font-family: 'Manrope', sans-serif; color: var(--text-main); margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
+        body { background-color: var(--bg-color); font-family: 'Manrope', sans-serif; color: var(--text-main); margin: 0; padding: 0; transition: 0.3s; }
         
         /* HEADER ADMIN */
         .admin-header { background: var(--card-bg); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px;}
@@ -36,8 +36,8 @@
         input:checked + .slider { background-color: var(--primary); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* BẢNG QUẢN TRỊ (DESKTOP) */
-        .admin-container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; } /* Giới hạn chiều rộng để không bị tràn trên màn hình lớn */
+        /* BẢNG QUẢN TRỊ */
+        .admin-container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
         .table-responsive { width: 100%; background: var(--card-bg); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 15px 20px; border-bottom: 1px solid var(--border); text-align: left; font-size: 14px; line-height: 1.5; vertical-align: middle;}
@@ -48,61 +48,49 @@
         .badge-late { background-color: var(--danger); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block;}
         
         /* NÚT BẤM */
-        .btn { padding: 8px 15px; border-radius: 6px; border: none; font-weight: 700; font-family: 'Manrope', sans-serif; cursor: pointer; transition: 0.2s; font-size: 13px; display: inline-block;}
+        .btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: 700; font-family: 'Manrope', sans-serif; cursor: pointer; transition: 0.2s; font-size: 14px; display: inline-block;}
         .btn-checkin { background-color: var(--primary); color: white; }
         .btn-checkin:hover { background-color: var(--primary-hover); }
         .btn-checkout { background-color: var(--warning); color: #111; display: none; }
         
-        .btn-full { width: 100%; padding: 12px; margin-top: 15px; font-size: 15px; }
-        .btn-cam { background-color: var(--primary); color: white; }
+        .btn-full { width: 100%; padding: 12px; font-size: 15px; margin-top: 10px; }
         .btn-success { background-color: var(--success); color: white; }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
 
-        /* BẢNG QUẢN TRỊ (MOBILE - CARD LAYOUT) */
         @media (max-width: 768px) {
             .admin-header { padding: 15px; flex-direction: column; align-items: flex-start; }
             .theme-switch-wrapper { align-self: flex-end; margin-top: -30px; }
             .admin-container { padding: 15px; }
-            
-            /* Ép bảng thành dạng khối để bỏ thanh cuộn ngang */
             table, thead, tbody, th, td, tr { display: block; }
-            thead tr { position: absolute; top: -9999px; left: -9999px; } /* Ẩn tiêu đề cột */
-            
-            tr { margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--card-bg); box-shadow: 0 4px 10px rgba(0,0,0,0.03);}
-            
+            thead tr { position: absolute; top: -9999px; left: -9999px; } 
+            tr { margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--card-bg); }
             td { position: relative; padding: 12px 15px 12px 45%; text-align: right; border-bottom: 1px solid var(--border); min-height: 45px; display: flex; flex-direction: column; justify-content: center; align-items: flex-end;}
             td:last-child { border-bottom: 0; align-items: center; padding: 15px; }
-            
-            /* Dùng thuộc tính data-label trong HTML để hiển thị tiêu đề bên trái */
-            td::before { 
-                content: attr(data-label); 
-                position: absolute; 
-                left: 15px; 
-                width: 35%; 
-                text-align: left; 
-                font-weight: 700; 
-                color: var(--primary); 
-                top: 50%; 
-                transform: translateY(-50%); 
-                font-size: 13px;
-            }
-            td:last-child::before { display: none; } /* Ẩn label ở ô nút bấm */
-            
+            td::before { content: attr(data-label); position: absolute; left: 15px; width: 35%; text-align: left; font-weight: 700; color: var(--primary); top: 50%; transform: translateY(-50%); font-size: 13px;}
+            td:last-child::before { display: none; } 
             .btn { width: 100%; text-align: center; }
         }
 
-        /* MODAL POPUP & CAMERA */
+        /* MODAL CHUNG */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
-        .modal-box { background: var(--card-bg); width: 100%; max-width: 450px; padding: 30px; border-radius: 12px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-box { background: var(--card-bg); width: 100%; max-width: 450px; padding: 30px; border-radius: 12px; position: relative; max-height: 95vh; overflow-y: auto; }
         .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: var(--text-main); font-weight: bold;}
         
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px;}
         .form-select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Manrope', sans-serif; font-size: 14px; background: transparent; color: var(--text-main); }
-        .form-select option { color: #111; }
-
-        .camera-box { position: relative; width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 8px; overflow: hidden; display: none; margin-top: 15px; }
+        
+        /* RIÊNG POPUP CAMERA TRỰC TIẾP LỚP 2 */
+        #cameraOverlay { z-index: 2000; background: rgba(0,0,0,0.95); }
+        .camera-box { position: relative; width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 8px; overflow: hidden; display: flex; justify-content: center; align-items: center;}
         #webcamVideo { width: 100%; height: 100%; object-fit: cover; }
-        #resultImage { width: 100%; display: none; border-radius: 8px; margin-top: 15px; }
+        #resultImage { width: 100%; height: 100%; object-fit: cover; display: none; }
+        
+        .camera-actions { display: flex; gap: 10px; margin-top: 15px; width: 100%;}
+        .camera-actions .btn { flex: 1; }
+
+        .status-msg { font-size: 14px; color: var(--success); font-weight: 700; text-align: center; margin: 15px 0; display: none;}
     </style>
 </head>
 <body>
@@ -139,7 +127,6 @@
                     </tr>
                 </thead>
                 <tbody id="dataTableBody">
-                    <!-- Bổ sung thuộc tính data-label vào từng thẻ td để phục vụ giao diện mobile -->
                     <tr>
                         <td data-label="Thời gian gửi đơn">10:15 - 08/11/2026</td>
                         <td data-label="Thời gian dự kiến">14:30 - 08/11/2026</td>
@@ -160,41 +147,57 @@
         </div>
     </div>
 
+    <!-- POPUP LỚP 1: XÁC NHẬN SỐ LƯỢNG -->
     <div class="modal-overlay" id="checkInModal">
         <div class="modal-box">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <span class="close-btn" onclick="closeModal('checkInModal')">&times;</span>
             <h3 style="color: var(--primary); text-align: center; margin-top:0; text-transform: uppercase;">Xác nhận khách đến</h3>
             <p style="text-align: center; font-size: 14px; margin-bottom: 20px;">Sale phụ trách: <strong id="modalSaleName"></strong></p>
             
-            <div id="step1-form">
-                <div class="form-group">
-                    <label>1. Số lượng Sale đến dự án:</label>
-                    <select class="form-select" id="saleStatus">
-                        <option value="Đủ">Đủ so với đăng ký</option>
-                        <option value="Không đủ">Không đủ / Sai lệch</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>2. Số lượng Khách hàng đến dự án:</label>
-                    <select class="form-select" id="guestStatus">
-                        <option value="Đủ">Đủ so với đăng ký</option>
-                        <option value="Không đủ">Không đủ / Sai lệch</option>
-                    </select>
-                </div>
-                
-                <button type="button" class="btn btn-full btn-cam" id="btnOpenCamera" onclick="startCamera()">CHỤP ẢNH XÁC NHẬN</button>
+            <div class="form-group">
+                <label>1. Số lượng Sale đến dự án:</label>
+                <select class="form-select" id="saleStatus">
+                    <option value="Đủ">Đủ so với đăng ký</option>
+                    <option value="Không đủ">Không đủ / Sai lệch</option>
+                </select>
             </div>
             
-            <div class="camera-box" id="cameraBox">
+            <div class="form-group">
+                <label>2. Số lượng Khách hàng đến dự án:</label>
+                <select class="form-select" id="guestStatus">
+                    <option value="Đủ">Đủ so với đăng ký</option>
+                    <option value="Không đủ">Không đủ / Sai lệch</option>
+                </select>
+            </div>
+            
+            <div id="photoStatus" class="status-msg">Đã đính kèm ảnh xác minh!</div>
+            
+            <button type="button" class="btn btn-full btn-checkin" id="btnOpenPhoto" onclick="openCameraLayer()">CHỤP ẢNH XÁC NHẬN</button>
+            <button type="button" class="btn btn-full btn-success" id="btnSubmitFinal" style="display:none;" onclick="submitFinalData()">XÁC NHẬN GỬI LÊN HỆ THỐNG</button>
+        </div>
+    </div>
+
+    <!-- POPUP LỚP 2: GIAO DIỆN CHỤP ẢNH MỚI ĐÈ LÊN -->
+    <div class="modal-overlay" id="cameraOverlay">
+        <div class="modal-box" style="padding: 20px; background: #222;">
+            <h3 style="color: #fff; text-align: center; margin-top:0; font-size: 16px;">GHI HÌNH TIMEMARK</h3>
+            <div class="camera-box">
                 <video id="webcamVideo" autoplay playsinline></video>
-                <button type="button" class="btn btn-full btn-danger" style="background:#dc3545; color:#fff; position:absolute; bottom:10px; width:90%; left:5%;" onclick="takeSnapshot()">CHỤP NGAY</button>
+                <img id="resultImage" alt="Ảnh minh chứng">
+                <canvas id="snapshotCanvas" style="display:none;"></canvas>
             </div>
             
-            <canvas id="snapshotCanvas" style="display:none;"></canvas>
-            <img id="resultImage" alt="Ảnh minh chứng">
-            
-            <button type="button" class="btn btn-full btn-success" id="btnSubmitCheckIn" style="display:none;" onclick="submitCheckIn()">XÁC NHẬN VÀ LƯU HỆ THỐNG</button>
+            <!-- Nhóm nút lúc chưa chụp -->
+            <div class="camera-actions" id="actionCapture">
+                <button type="button" class="btn btn-danger" onclick="takeSnapshot()">CHỤP NGAY</button>
+                <button type="button" class="btn btn-secondary" onclick="closeCameraLayer()">HỦY</button>
+            </div>
+
+            <!-- Nhóm nút sau khi chụp xong -->
+            <div class="camera-actions" id="actionConfirm" style="display:none;">
+                <button type="button" class="btn btn-secondary" onclick="retakePhoto()">CHỤP LẠI</button>
+                <button type="button" class="btn btn-success" onclick="confirmPhoto()">DÙNG ẢNH NÀY</button>
+            </div>
         </div>
     </div>
 
@@ -202,14 +205,8 @@
         document.getElementById('themeToggleAdmin').addEventListener('change', function() {
             const html = document.documentElement;
             const logo = document.getElementById('adminLogo');
-            
-            if (this.checked) {
-                html.setAttribute('data-theme', 'dark');
-                if (logo) logo.src = 'logodark.svg';
-            } else {
-                html.setAttribute('data-theme', 'light');
-                if (logo) logo.src = 'logo.svg';
-            }
+            if (this.checked) { html.setAttribute('data-theme', 'dark'); if (logo) logo.src = 'logodark.svg'; } 
+            else { html.setAttribute('data-theme', 'light'); if (logo) logo.src = 'logo.svg'; }
         });
 
         let currentRecordId = '';
@@ -220,30 +217,40 @@
             currentRecordId = id;
             document.getElementById('modalSaleName').innerText = saleName;
             
-            document.getElementById('step1-form').style.display = 'block';
-            document.getElementById('btnOpenCamera').style.display = 'block';
-            document.getElementById('cameraBox').style.display = 'none';
-            document.getElementById('resultImage').style.display = 'none';
-            document.getElementById('btnSubmitCheckIn').style.display = 'none';
+            // Đặt lại Popup 1
+            document.getElementById('photoStatus').style.display = 'none';
+            document.getElementById('btnOpenPhoto').style.display = 'block';
+            document.getElementById('btnSubmitFinal').style.display = 'none';
+            finalProcessedDataUrl = "";
             
             document.getElementById('checkInModal').style.display = 'flex';
         }
 
-        function closeModal() {
-            document.getElementById('checkInModal').style.display = 'none';
-            if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
         }
 
-        function startCamera() {
-            document.getElementById('btnOpenCamera').style.display = 'none';
-            document.getElementById('cameraBox').style.display = 'block';
-            const videoElement = document.getElementById('webcamVideo');
-            
+        // --- XỬ LÝ LỚP CAMERA TRỰC TIẾP ---
+        function openCameraLayer() {
+            document.getElementById('cameraOverlay').style.display = 'flex';
+            document.getElementById('resultImage').style.display = 'none';
+            document.getElementById('webcamVideo').style.display = 'block';
+            document.getElementById('actionCapture').style.display = 'flex';
+            document.getElementById('actionConfirm').style.display = 'none';
+
             navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1440 } } })
             .then(stream => {
                 mediaStream = stream;
-                videoElement.srcObject = stream;
-            }).catch(err => alert("Vui lòng cấp quyền mở Camera cho trình duyệt!"));
+                document.getElementById('webcamVideo').srcObject = stream;
+            }).catch(err => {
+                alert("Vui lòng cấp quyền mở Camera!");
+                closeCameraLayer();
+            });
+        }
+
+        function closeCameraLayer() {
+            if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+            document.getElementById('cameraOverlay').style.display = 'none';
         }
 
         function takeSnapshot() {
@@ -271,51 +278,88 @@
                 const logoW = canvas.width * 0.65; 
                 const logoH = (wtmLogo.height / wtmLogo.width) * logoW;
                 ctx.drawImage(wtmLogo, 60, canvas.height - 90 - logoH - 85, logoW, logoH);
-
-                ctx.font = `700 45px 'Manrope', sans-serif`;
-                ctx.fillStyle = "#ffffff";
-                ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 8;
+                ctx.font = `700 45px 'Manrope', sans-serif`; ctx.fillStyle = "#ffffff"; ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 8;
                 ctx.fillText(timeStr + " | " + dateStr, 60, canvas.height - 90 - 30);
                 
-                finishPhotoProcessing(canvas);
+                showPreview(canvas);
             };
             wtmLogo.onerror = function() { 
-                ctx.font = `700 45px 'Manrope', sans-serif`;
-                ctx.fillStyle = "#ffffff";
+                ctx.font = `700 45px 'Manrope', sans-serif`; ctx.fillStyle = "#ffffff";
                 ctx.fillText("AN VIỆT HOMES: " + timeStr + " | " + dateStr, 60, canvas.height - 50);
-                finishPhotoProcessing(canvas);
+                showPreview(canvas);
             };
         }
 
-        function finishPhotoProcessing(canvas) {
-            mediaStream.getTracks().forEach(track => track.stop());
-            document.getElementById('cameraBox').style.display = 'none';
-            document.getElementById('step1-form').style.display = 'none'; 
-            
+        function showPreview(canvas) {
             finalProcessedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            const resultImg = document.getElementById('resultImage');
-            resultImg.src = finalProcessedDataUrl;
-            resultImg.style.display = 'block';
-            
-            document.getElementById('btnSubmitCheckIn').style.display = 'block';
+            document.getElementById('webcamVideo').style.display = 'none';
+            const resImg = document.getElementById('resultImage');
+            resImg.src = finalProcessedDataUrl;
+            resImg.style.display = 'block';
+
+            document.getElementById('actionCapture').style.display = 'none';
+            document.getElementById('actionConfirm').style.display = 'flex';
         }
 
-        function submitCheckIn() {
-            document.getElementById('btnSubmitCheckIn').innerText = "Đang lưu trữ dữ liệu...";
+        function retakePhoto() {
+            document.getElementById('resultImage').style.display = 'none';
+            document.getElementById('webcamVideo').style.display = 'block';
+            document.getElementById('actionCapture').style.display = 'flex';
+            document.getElementById('actionConfirm').style.display = 'none';
+        }
+
+        function confirmPhoto() {
+            closeCameraLayer();
             
-            setTimeout(() => {
-                alert("Đã lưu Check-in thành công!");
-                closeModal();
+            // Xử lý Popup 1 sau khi có ảnh
+            document.getElementById('photoStatus').style.display = 'block';
+            document.getElementById('btnOpenPhoto').style.display = 'none';
+            document.getElementById('btnSubmitFinal').style.display = 'block';
+        }
+
+        // --- GỬI DỮ LIỆU CUỐI CÙNG LÊN BACKEND ---
+        function submitFinalData() {
+            document.getElementById('btnSubmitFinal').innerText = "ĐANG TẢI ẢNH VÀ LƯU...";
+            document.getElementById('btnSubmitFinal').disabled = true;
+
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyE1t53Uq6B12d2QUgn2t8wvJuL4_o2MOFHZzaIKjDFH5_3tQb341RcRJpNaBueczDPwQ/exec'; 
+
+            const formData = new URLSearchParams();
+            formData.append('action', 'checkin');
+            formData.append('id', currentRecordId);
+            formData.append('saleStatus', document.getElementById('saleStatus').value);
+            formData.append('guestStatus', document.getElementById('guestStatus').value);
+            formData.append('photoBase64', finalProcessedDataUrl.split(',')[1]); 
+            
+            fetch(SCRIPT_URL, { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                alert("Check-in thành công và đã lưu ảnh vào Drive!");
+                closeModal('checkInModal');
                 
                 document.getElementById('btn-in-' + currentRecordId).style.display = 'none';
                 document.getElementById('btn-out-' + currentRecordId).style.display = 'inline-block';
-            }, 1000);
+                
+                document.getElementById('btnSubmitFinal').innerText = "XÁC NHẬN GỬI LÊN HỆ THỐNG";
+                document.getElementById('btnSubmitFinal').disabled = false;
+            }).catch(err => {
+                alert("Lỗi mạng! Vui lòng thử lại.");
+                document.getElementById('btnSubmitFinal').innerText = "XÁC NHẬN GỬI LÊN HỆ THỐNG";
+                document.getElementById('btnSubmitFinal').disabled = false;
+            });
         }
 
         function confirmCheckOut(id, saleName) {
             if(confirm("Xác nhận Sale " + saleName + " và khách đã ra về?")) {
-                alert("Ghi nhận Check-out thành công!");
-                document.getElementById('btn-out-' + id).style.display = 'none';
+                const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyE1t53Uq6B12d2QUgn2t8wvJuL4_o2MOFHZzaIKjDFH5_3tQb341RcRJpNaBueczDPwQ/exec'; 
+                const formData = new URLSearchParams();
+                formData.append('action', 'checkout');
+                formData.append('id', id);
+
+                fetch(SCRIPT_URL, { method: 'POST', body: formData }).then(res => res.json()).then(data => {
+                    alert("Ghi nhận Check-out thành công!");
+                    document.getElementById('btn-out-' + id).style.display = 'none';
+                });
             }
         }
     </script>
