@@ -367,42 +367,53 @@
         }
 
         function submitFinalData() {
-            const btnSubmit = document.getElementById('btnSubmitFinal');
-            btnSubmit.innerText = "ĐANG TẢI ẢNH VÀ LƯU...";
-            btnSubmit.disabled = true;
+    const btnSubmit = document.getElementById('btnSubmitFinal');
+    btnSubmit.innerText = "ĐANG TẢI ẢNH VÀ LƯU...";
+    btnSubmit.disabled = true;
 
-            const formData = new URLSearchParams();
-            formData.append('action', 'checkin');
-            formData.append('id', currentRecordId);
-            formData.append('saleStatus', document.getElementById('saleStatus').value);
-            formData.append('guestStatus', document.getElementById('guestStatus').value);
-            formData.append('photoBase64', finalProcessedDataUrl.split(',')[1]); 
-            
-            fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                body: formData 
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    alert("Check-in thành công và đã lưu ảnh vào Drive!");
-                    closeModal('checkInModal');
-                    
-                    document.getElementById('btn-in-' + currentRecordId).style.display = 'none';
-                    document.getElementById('btn-out-' + currentRecordId).style.display = 'inline-block';
-                } else {
-                    alert("Lỗi từ hệ thống: " + (data.message || "Không xác định"));
-                }
-                btnSubmit.innerText = "XÁC NHẬN GỬI LÊN HỆ THỐNG";
-                btnSubmit.disabled = false;
-            })
-            .catch(err => {
-                console.error(err);
-                alert("Lỗi kết nối hoặc thời gian phản hồi quá lâu! Vui lòng thử lại.");
-                btnSubmit.innerText = "XÁC NHẬN GỬI LÊN HỆ THỐNG";
-                btnSubmit.disabled = false;
-            });
+    // Sử dụng FormData chuẩn thay vì URLSearchParams để không bị phình dung lượng Base64
+    const formData = new FormData();
+    formData.append('action', 'checkin');
+    formData.append('id', currentRecordId);
+    formData.append('saleStatus', document.getElementById('saleStatus').value);
+    formData.append('guestStatus', document.getElementById('guestStatus').value);
+    
+    // Xử lý chuỗi Base64: thay thế khoảng trắng thành dấu '+' (nếu có) để tránh lỗi truyền tải
+    let base64String = finalProcessedDataUrl.split(',')[1];
+    formData.append('photoBase64', base64String); 
+    
+    fetch(SCRIPT_URL, { 
+        method: 'POST', 
+        body: formData 
+    })
+    .then(res => res.text()) // Lấy text thô để bắt được lỗi HTML từ Google (nếu có)
+    .then(text => {
+        try {
+            const data = JSON.parse(text); // Ép kiểu về JSON
+            if (data.status === 'success') {
+                alert("Check-in thành công và đã lưu ảnh vào Drive!");
+                closeModal('checkInModal');
+                
+                document.getElementById('btn-in-' + currentRecordId).style.display = 'none';
+                document.getElementById('btn-out-' + currentRecordId).style.display = 'inline-block';
+            } else {
+                alert("Lỗi Backend: " + (data.message || "Không xác định"));
+            }
+        } catch (e) {
+            // Nếu Google trả về trang web báo lỗi thay vì JSON, báo lỗi chi tiết ra màn hình
+            console.error("Lỗi thô từ Google:", text);
+            alert("Lỗi máy chủ Google Apps Script. Vui lòng nhấn F12, xem tab Console để biết chi tiết lỗi.");
         }
+        btnSubmit.innerText = "XÁC NHẬN GỬI LÊN HỆ THỐNG";
+        btnSubmit.disabled = false;
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Bị trình duyệt chặn hoặc mất mạng: " + err.message);
+        btnSubmit.innerText = "XÁC NHẬN GỬI LÊN HỆ THỐNG";
+        btnSubmit.disabled = false;
+    });
+}
 
         function confirmCheckOut(id, saleName) {
             if(confirm("Xác nhận Sale " + saleName + " và khách đã ra về?")) {
