@@ -19,15 +19,15 @@
         }
         
         * { box-sizing: border-box; }
-        body { background-color: var(--bg-color); font-family: 'Manrope', sans-serif; color: var(--text-main); transition: 0.3s; margin: 0; padding: 0; }
+        body { background-color: var(--bg-color); font-family: 'Manrope', sans-serif; color: var(--text-main); transition: background-color 0.3s, color 0.3s; margin: 0; padding: 0; }
         
-        /* HEADER - CÓ LOGO VÀ TÊN CÔNG TY */
+        /* HEADER */
         .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; flex-wrap: wrap; gap: 20px; }
         .company-info { display: flex; align-items: center; gap: 15px; }
         .company-info img { height: 50px; transition: 0.3s; }
         .company-name { font-weight: 700; font-size: 14px; text-transform: uppercase; color: var(--header-text); line-height: 1.4; border-left: 2px solid var(--header-text); padding-left: 15px; }
         
-        /* NÚT GẠT GIAO DIỆN CHUẨN IOS */
+        /* TOGGLE GIAO DIỆN */
         .theme-switch-wrapper { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; }
         .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -44,7 +44,7 @@
         .label-col { width: 35%; font-weight: 600; margin-bottom: 5px; }
         .input-col { width: 65%; }
         input, select { width: 100%; border: none; border-bottom: 1px solid var(--border-color); background: transparent; color: var(--text-main); padding: 8px 0; font-family: 'Manrope', sans-serif; font-size: 16px; outline: none; transition: 0.3s; }
-        input:focus { border-bottom: 2px solid var(--primary-btn); }
+        input:focus, select:focus { border-bottom: 2px solid var(--primary-btn); }
         input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(var(--icon-invert, 0)); cursor: pointer; }
         [data-theme="dark"] { --icon-invert: 1; }
         
@@ -54,7 +54,6 @@
         .btn-submit { background: var(--primary-btn); color: #fff; border-radius: 30px; padding: 12px 40px; font-weight: 700; border: none; cursor: pointer; display: block; margin: 30px auto 0; transition: 0.3s; font-family: 'Manrope', sans-serif;}
         .btn-submit:hover { background: var(--primary-hover); }
 
-        /* MOBILE RESPONSIVE */
         @media (max-width: 768px) {
             .top-header { padding: 15px 20px; flex-direction: column; align-items: flex-start; }
             .theme-switch-wrapper { align-self: flex-end; }
@@ -73,7 +72,7 @@
         <div class="theme-switch-wrapper">
             <span>Sáng</span>
             <label class="switch">
-                <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+                <input type="checkbox" id="themeToggle">
                 <span class="slider"></span>
             </label>
             <span>Tối</span>
@@ -83,29 +82,83 @@
     <div class="form-container">
         <div class="form-title">ĐĂNG KÝ THAM QUAN DỰ ÁN</div>
         <form id="bookingForm">
-            <div class="row-item"><div class="label-col">Thời gian tham quan:</div><div class="input-col"><input type="datetime-local" id="timeVisit" required></div></div>
-            <div class="row-item"><div class="label-col">Họ và tên NVKD:</div><div class="input-col"><input type="text" id="name" required placeholder="Nguyễn Văn A"></div></div>
-            <div class="row-item"><div class="label-col">Số điện thoại:</div><div class="input-col"><input type="tel" id="phone" required></div></div>
-            <div class="row-item"><div class="label-col">Số CCCD:</div><div class="input-col"><input type="text" id="cccd" required></div></div>
-            <div class="row-item"><div class="label-col">Số lượng Khách hàng:</div><div class="input-col"><input type="number" id="guestCount" required></div></div>
-            <div class="row-item"><div class="label-col">Tổng số người (Sale + Khách):</div><div class="input-col"><input type="number" id="totalCount" required></div></div>
-            <div class="row-item"><div class="label-col">Biển số xe (nếu có):</div><div class="input-col"><input type="text" id="plate"></div></div>
-            <div class="row-item">
-                <div class="label-col">Mục đích:</div>
-                <div class="input-col checkbox-group">
-                    <label><input type="checkbox" class="purpose" value="Quay video Dự án"> Quay video Dự án</label>
-                    <label><input type="checkbox" class="purpose" value="Dẫn khách tham quan"> Dẫn khách tham quan</label>
-                </div>
-            </div>
-            <button type="submit" class="btn-submit" id="btnSubmit">GỬI ĐĂNG KÝ</button>
-        </form>
+    <div class="row-item"><div class="label-col">Thời gian tham quan:</div><div class="input-col"><input type="datetime-local" id="timeVisit" required></div></div>
+    
+    <!-- Tên NVKD đưa lên trên -->
+    <div class="row-item"><div class="label-col">Họ và tên NVKD:</div><div class="input-col"><input type="text" id="name" required placeholder="Nguyễn Văn A"></div></div>
+    
+    <!-- Phòng kinh doanh chuyển xuống dưới -->
+    <div class="row-item"><div class="label-col">Phòng kinh doanh:</div><div class="input-col"><input type="text" id="department" required placeholder="Khối/Phòng ban"></div></div>
+    
+    <div class="row-item"><div class="label-col">Số điện thoại:</div><div class="input-col"><input type="tel" id="phone" required></div></div>
+    <div class="row-item"><div class="label-col">Số CCCD:</div><div class="input-col"><input type="text" id="cccd" required></div></div>
+    <div class="row-item"><div class="label-col">Số lượng Khách hàng:</div><div class="input-col"><input type="number" id="guestCount" required></div></div>
+    <div class="row-item"><div class="label-col">Tổng số người (Sale + Khách):</div><div class="input-col"><input type="number" id="totalCount" required></div></div>
+    <div class="row-item"><div class="label-col">Biển số xe (nếu có):</div><div class="input-col"><input type="text" id="plate"></div></div>
+    <div class="row-item">
+        <div class="label-col">Mục đích:</div>
+        <div class="input-col checkbox-group">
+            <label><input type="checkbox" class="purpose" value="Quay video Dự án"> Quay video Dự án</label>
+            <label><input type="checkbox" class="purpose" value="Dẫn khách tham quan"> Dẫn khách tham quan</label>
+        </div>
+    </div>
+    <button type="submit" class="btn-submit" id="btnSubmit">GỬI ĐĂNG KÝ</button>
+</form>
     </div>
 
     <script>
-        function toggleTheme() {
+        // Xử lý Dark/Light Mode với EventListener độc lập
+        document.getElementById('themeToggle').addEventListener('change', function() {
             const html = document.documentElement;
             const logo = document.getElementById('mainLogo');
-            const isDark = document.getElementById('themeToggle').checked;
             
-            if (isDark) {
-                html.setAttribute('data-theme', '
+            if (this.checked) {
+                html.setAttribute('data-theme', 'dark');
+                if (logo) logo.src = 'logodark.svg';
+            } else {
+                html.setAttribute('data-theme', 'light');
+                if (logo) logo.src = 'logo.svg';
+            }
+        });
+
+        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            btn.innerText = "ĐANG GỬI..."; btn.disabled = true;
+
+            const visitTime = new Date(document.getElementById('timeVisit').value).getTime();
+            const now = new Date().getTime();
+            const diffMinutes = (visitTime - now) / (1000 * 60);
+            const isLate = diffMinutes < 50; 
+
+            let purposes = [];
+            document.querySelectorAll('.purpose:checked').forEach(cb => purposes.push(cb.value));
+
+            const formData = new URLSearchParams();
+            formData.append('thoiGianThamQuan', document.getElementById('timeVisit').value);
+            formData.append('phongKinhDoanh', document.getElementById('department').value);
+            formData.append('tenNVKD', document.getElementById('name').value);
+            formData.append('sdt', document.getElementById('phone').value);
+            formData.append('cccd', document.getElementById('cccd').value);
+            formData.append('slKhach', document.getElementById('guestCount').value);
+            formData.append('tongNguoi', document.getElementById('totalCount').value);
+            formData.append('bienSo', document.getElementById('plate').value);
+            formData.append('mucDich', purposes.join(", "));
+            formData.append('isLate', isLate);
+
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyE1t53Uq6B12d2QUgn2t8wvJuL4_o2MOFHZzaIKjDFH5_3tQb341RcRJpNaBueczDPwQ/exec'; 
+
+            fetch(SCRIPT_URL, { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                alert("Đăng ký tham quan thành công!");
+                document.getElementById('bookingForm').reset();
+                btn.innerText = "GỬI ĐĂNG KÝ"; btn.disabled = false;
+            }).catch(err => { 
+                alert("Lỗi mạng, vui lòng thử lại!"); 
+                btn.innerText = "GỬI ĐĂNG KÝ"; btn.disabled = false; 
+            });
+        });
+    </script>
+</body>
+</html>
