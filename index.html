@@ -45,8 +45,15 @@
         .input-col { width: 65%; }
         input, select { width: 100%; border: none; border-bottom: 1px solid var(--border-color); background: transparent; color: var(--text-main); padding: 8px 0; font-family: 'Manrope', sans-serif; font-size: 16px; outline: none; transition: 0.3s; }
         input:focus, select:focus { border-bottom: 2px solid var(--primary-btn); }
-        input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(var(--icon-invert, 0)); cursor: pointer; }
+        
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(var(--icon-invert, 0)); cursor: pointer; }
         [data-theme="dark"] { --icon-invert: 1; }
+        
+        /* ĐỊNH DẠNG Ô CHỌN THỜI GIAN KÉP */
+        .time-date-group { display: flex; align-items: center; gap: 15px; width: 100%; }
+        .time-date-group .time-input { width: 100px; text-align: center; letter-spacing: 1px; font-weight: 700; }
+        .time-date-group .date-input { flex: 1; }
+        .time-date-group .separator { font-weight: 700; color: var(--text-main); }
         
         .checkbox-group label { display: inline-block; width: auto; margin-right: 15px; cursor: pointer; font-weight: 500; }
         .checkbox-group input { width: auto; margin-right: 5px; }
@@ -82,32 +89,36 @@
     <div class="form-container">
         <div class="form-title">ĐĂNG KÝ THAM QUAN DỰ ÁN</div>
         <form id="bookingForm">
-    <div class="row-item"><div class="label-col">Thời gian tham quan:</div><div class="input-col"><input type="datetime-local" id="timeVisit" required></div></div>
-    
-    <!-- Tên NVKD đưa lên trên -->
-    <div class="row-item"><div class="label-col">Họ và tên NVKD:</div><div class="input-col"><input type="text" id="name" required placeholder="Nguyễn Văn A"></div></div>
-    
-    <!-- Phòng kinh doanh chuyển xuống dưới -->
-    <div class="row-item"><div class="label-col">Phòng kinh doanh:</div><div class="input-col"><input type="text" id="department" required placeholder="Khối/Phòng ban"></div></div>
-    
-    <div class="row-item"><div class="label-col">Số điện thoại:</div><div class="input-col"><input type="tel" id="phone" required></div></div>
-    <div class="row-item"><div class="label-col">Số CCCD:</div><div class="input-col"><input type="text" id="cccd" required></div></div>
-    <div class="row-item"><div class="label-col">Số lượng Khách hàng:</div><div class="input-col"><input type="number" id="guestCount" required></div></div>
-    <div class="row-item"><div class="label-col">Tổng số người (Sale + Khách):</div><div class="input-col"><input type="number" id="totalCount" required></div></div>
-    <div class="row-item"><div class="label-col">Biển số xe (nếu có):</div><div class="input-col"><input type="text" id="plate"></div></div>
-    <div class="row-item">
-        <div class="label-col">Mục đích:</div>
-        <div class="input-col checkbox-group">
-            <label><input type="checkbox" class="purpose" value="Quay video Dự án"> Quay video Dự án</label>
-            <label><input type="checkbox" class="purpose" value="Dẫn khách tham quan"> Dẫn khách tham quan</label>
-        </div>
-    </div>
-    <button type="submit" class="btn-submit" id="btnSubmit">GỬI ĐĂNG KÝ</button>
-</form>
+            <!-- Thay đổi khối thời gian -->
+            <div class="row-item">
+                <div class="label-col">Thời gian tham quan:</div>
+                <div class="input-col time-date-group">
+                    <input type="text" id="visitTime" class="time-input" required placeholder="HH:MM" maxlength="5" title="Nhập giờ hệ 24h (VD: 14:30)">
+                    <span class="separator">-</span>
+                    <input type="date" id="visitDate" class="date-input" required>
+                </div>
+            </div>
+            
+            <div class="row-item"><div class="label-col">Họ và tên NVKD:</div><div class="input-col"><input type="text" id="name" required placeholder="Nguyễn Văn A"></div></div>
+            <div class="row-item"><div class="label-col">Phòng kinh doanh:</div><div class="input-col"><input type="text" id="department" required placeholder="Khối/Phòng ban"></div></div>
+            <div class="row-item"><div class="label-col">Số điện thoại:</div><div class="input-col"><input type="tel" id="phone" required></div></div>
+            <div class="row-item"><div class="label-col">Số CCCD:</div><div class="input-col"><input type="text" id="cccd" required></div></div>
+            <div class="row-item"><div class="label-col">Số lượng Khách hàng:</div><div class="input-col"><input type="number" id="guestCount" required></div></div>
+            <div class="row-item"><div class="label-col">Tổng số người (Sale + Khách):</div><div class="input-col"><input type="number" id="totalCount" required></div></div>
+            <div class="row-item"><div class="label-col">Biển số xe (nếu có):</div><div class="input-col"><input type="text" id="plate"></div></div>
+            <div class="row-item">
+                <div class="label-col">Mục đích:</div>
+                <div class="input-col checkbox-group">
+                    <label><input type="checkbox" class="purpose" value="Quay video Dự án"> Quay video Dự án</label>
+                    <label><input type="checkbox" class="purpose" value="Dẫn khách tham quan"> Dẫn khách tham quan</label>
+                </div>
+            </div>
+            <button type="submit" class="btn-submit" id="btnSubmit">GỬI ĐĂNG KÝ</button>
+        </form>
     </div>
 
     <script>
-        // Xử lý Dark/Light Mode với EventListener độc lập
+        // Xử lý Dark/Light Mode
         document.getElementById('themeToggle').addEventListener('change', function() {
             const html = document.documentElement;
             const logo = document.getElementById('mainLogo');
@@ -121,21 +132,48 @@
             }
         });
 
+        // Tự động định dạng giờ và kiểm tra hợp lệ
+        const timeInput = document.getElementById('visitTime');
+        timeInput.addEventListener('input', function(e) {
+            let val = this.value.replace(/\D/g, ''); // Xóa chữ, chỉ giữ số
+            if (val.length >= 3) {
+                this.value = val.substring(0, 2) + ':' + val.substring(2, 4);
+            } else {
+                this.value = val;
+            }
+        });
+        
+        timeInput.addEventListener('blur', function() {
+            const regex = /^([01]\d|2[0-3]):([0-5]\d)$/; // Validate hệ 24h
+            if (this.value && !regex.test(this.value)) {
+                alert("Vui lòng nhập giờ hợp lệ theo định dạng 24h (Ví dụ: 14:30)");
+                this.value = '';
+            }
+        });
+
         document.getElementById('bookingForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
             btn.innerText = "ĐANG GỬI..."; btn.disabled = true;
 
-            const visitTime = new Date(document.getElementById('timeVisit').value).getTime();
+            const visitTimeStr = document.getElementById('visitTime').value; // HH:mm
+            const visitDateStr = document.getElementById('visitDate').value; // YYYY-MM-DD
+            
+            // Tính toán đăng ký gấp (< 50 phút)
+            const visitDateTime = new Date(`${visitDateStr}T${visitTimeStr}:00`).getTime();
             const now = new Date().getTime();
-            const diffMinutes = (visitTime - now) / (1000 * 60);
+            const diffMinutes = (visitDateTime - now) / (1000 * 60);
             const isLate = diffMinutes < 50; 
+
+            // Cấu trúc lại chuỗi hiển thị lên bảng: Giờ:Phút - Ngày/Tháng/Năm
+            const dateParts = visitDateStr.split('-');
+            const formattedTimeVisit = `${visitTimeStr} - ${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
 
             let purposes = [];
             document.querySelectorAll('.purpose:checked').forEach(cb => purposes.push(cb.value));
 
             const formData = new URLSearchParams();
-            formData.append('thoiGianThamQuan', document.getElementById('timeVisit').value);
+            formData.append('thoiGianThamQuan', formattedTimeVisit);
             formData.append('phongKinhDoanh', document.getElementById('department').value);
             formData.append('tenNVKD', document.getElementById('name').value);
             formData.append('sdt', document.getElementById('phone').value);
