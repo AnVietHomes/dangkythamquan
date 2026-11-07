@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trình Quản Trị Tham Quan - An Việt Homes</title>
+    <!-- Giữ nguyên font Manrope chuẩn đồ họa -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #dcf0fa; --card-bg: #fff; --text-main: #111; 
+            --primary: #001a72; --primary-hover: #00104a;
+            --success: #28a745; --danger: #dc3545; --warning: #ffc107;
+        }
+        body { background-color: var(--bg-color); font-family: 'Manrope', sans-serif; color: var(--text-main); margin: 0; padding: 20px; }
+        
+        /* HEADER & BẢNG DỮ LIỆU */
+        .admin-container { background: var(--card-bg); max-width: 1200px; margin: 0 auto; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .page-title { text-align: center; font-weight: 800; font-size: 24px; text-transform: uppercase; color: var(--primary); margin-bottom: 20px;}
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid #ddd; text-align: left; font-size: 15px; }
+        th { background-color: var(--primary); color: #fff; font-weight: 700; }
+        tr:hover { background-color: #f8f9fa; }
+        
+        .badge-late { background-color: var(--danger); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        
+        /* NÚT BẤM */
+        .btn { padding: 8px 15px; border-radius: 6px; border: none; font-weight: 600; font-family: 'Manrope', sans-serif; cursor: pointer; transition: 0.2s; font-size: 14px;}
+        .btn-checkin { background-color: var(--primary); color: white; margin-right: 5px; }
+        .btn-checkin:hover { background-color: var(--primary-hover); }
+        .btn-checkout { background-color: var(--warning); color: #111; }
+        .btn-checkout:hover { background-color: #e0a800; }
+
+        /* MODAL (POPUP) OVERLAY */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-box { background: #fff; width: 450px; padding: 30px; border-radius: 12px; position: relative; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #999; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 8px; }
+        .form-select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Manrope', sans-serif; font-size: 15px; }
+        
+        /* GIAO DIỆN CAMERA TRỰC TIẾP TỪ BẢN GỐC */
+        .camera-box { position: relative; width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 8px; overflow: hidden; display: none; margin-top: 15px; }
+        #webcamVideo { width: 100%; height: 100%; object-fit: cover; }
+        #resultImage { width: 100%; display: none; border-radius: 8px; margin-top: 15px; }
+        
+        .btn-full { width: 100%; padding: 12px; margin-top: 15px; font-size: 15px; }
+        .btn-cam { background-color: var(--primary); color: white; }
+        .btn-success { background-color: var(--success); color: white; }
+    </style>
+</head>
+<body>
+
+<div class="admin-container">
+    <div class="page-title">QUẢN TRỊ ĐĂNG KÝ THAM QUAN</div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Thời gian dự kiến</th>
+                <th>NVKD</th>
+                <th>Thông tin khách</th>
+                <th>Lưu ý</th>
+                <th>Thao tác Lễ tân</th>
+            </tr>
+        </thead>
+        <tbody id="dataTableBody">
+            <!-- DỮ LIỆU MẪU ĐỂ BẠN HÌNH DUNG -->
+            <tr>
+                <td>14:30 - 08/11/2026</td>
+                <td><strong>Nguyễn Văn A</strong><br><small>0987654321</small></td>
+                <td>Khách: 2 | Tổng: 3</td>
+                <td><span class="badge-late">Đăng ký gấp (<50p)</span></td>
+                <td>
+                    <button class="btn btn-checkin" onclick="openCheckInModal('ID_001', 'Nguyễn Văn A', 1, 2)">Khách đến (Check-in)</button>
+                    <button class="btn btn-checkout" onclick="confirmCheckOut('ID_001', 'Nguyễn Văn A')" disabled>Khách về (Check-out)</button>
+                </td>
+            </tr>
+            <tr>
+                <td>15:00 - 08/11/2026</td>
+                <td><strong>Trần Thị B</strong><br><small>0912345678</small></td>
+                <td>Khách: 4 | Tổng: 5</td>
+                <td></td>
+                <td>
+                    <button class="btn btn-checkin" onclick="openCheckInModal('ID_002', 'Trần Thị B', 1, 4)">Khách đến (Check-in)</button>
+                    <button class="btn btn-checkout" onclick="confirmCheckOut('ID_002', 'Trần Thị B')" disabled>Khách về (Check-out)</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- POPUP CHECK-IN KHI ẤN NÚT "KHÁCH ĐẾN" -->
+<div class="modal-overlay" id="checkInModal">
+    <div class="modal-box">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h3 style="color: var(--primary); text-align: center; margin-top:0;">XÁC NHẬN KHÁCH ĐẾN</h3>
+        <p>Sale phụ trách: <strong id="modalSaleName"></strong></p>
+        
+        <div class="form-group">
+            <label>1. Số lượng Sale đến dự án:</label>
+            <select class="form-select" id="saleStatus">
+                <option value="Đủ">✅ Đủ so với đăng ký</option>
+                <option value="Không đủ">❌ Không đủ / Sai lệch</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>2. Số lượng Khách hàng đến dự án:</label>
+            <select class="form-select" id="guestStatus">
+                <option value="Đủ">✅ Đủ so với đăng ký</option>
+                <option value="Không đủ">❌ Không đủ / Sai lệch</option>
+            </select>
+        </div>
+        
+        <!-- NÚT MỞ CAMERA -->
+        <button type="button" class="btn btn-full btn-cam" id="btnOpenCamera" onclick="startCamera()">📸 Bật Camera Chụp Ảnh Xác Nhận</button>
+        
+        <!-- KHUNG CAMERA (Ẩn mặc định) -->
+        <div class="camera-box" id="cameraBox">
+            <video id="webcamVideo" autoplay playsinline></video>
+            <button type="button" class="btn btn-full btn-danger" style="background:#dc3545; color:#fff; position:absolute; bottom:10px; width:90%; left:5%;" onclick="takeSnapshot()">🔴 CHỤP ẢNH</button>
+        </div>
+        
+        <canvas id="snapshotCanvas" style="display:none;"></canvas>
+        <img id="resultImage" alt="Ảnh minh chứng">
+        
+        <button type="button" class="btn btn-full btn-success" id="btnSubmitCheckIn" style="display:none;" onclick="submitCheckIn()">✅ XÁC NHẬN & LƯU HỆ THỐNG</button>
+    </div>
+</div>
+
+<script>
+    let currentRecordId = '';
+    let mediaStream = null;
+    let finalProcessedDataUrl = "";
+
+    // 1. MỞ POPUP CHECK-IN
+    function openCheckInModal(id, saleName, registeredSale, registeredGuest) {
+        currentRecordId = id;
+        document.getElementById('modalSaleName').innerText = saleName;
+        
+        // Reset giao diện popup
+        document.getElementById('cameraBox').style.display = 'none';
+        document.getElementById('resultImage').style.display = 'none';
+        document.getElementById('btnOpenCamera').style.display = 'block';
+        document.getElementById('btnSubmitCheckIn').style.display = 'none';
+        
+        document.getElementById('checkInModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('checkInModal').style.display = 'none';
+        if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+    }
+
+    // 2. KHỞI ĐỘNG CAMERA CHUẨN ĐỒ HỌA
+    function startCamera() {
+        document.getElementById('btnOpenCamera').style.display = 'none';
+        document.getElementById('cameraBox').style.display = 'block';
+        const videoElement = document.getElementById('webcamVideo');
+        
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1440 } } })
+        .then(stream => {
+            mediaStream = stream;
+            videoElement.srcObject = stream;
+        }).catch(err => {
+            alert("Không thể mở được camera! Vui lòng cấp quyền camera.");
+        });
+    }
+
+    // 3. CHỤP ẢNH VÀ ĐÓNG DẤU WATERMARK TỪ CODE GỐC
+    function takeSnapshot() {
+        const videoElement = document.getElementById('webcamVideo');
+        const canvas = document.getElementById('snapshotCanvas');
+        canvas.width = 1200; canvas.height = 1600; 
+        const ctx = canvas.getContext('2d');
+        
+        // Tính toán cắt tỷ lệ 3:4
+        const videoW = videoElement.videoWidth; const videoH = videoElement.videoHeight;
+        let cropW = videoW; let cropH = videoW * (4 / 3);
+        let cropX = 0; let cropY = (videoH - cropH) / 2;
+        if (cropH > videoH) { cropH = videoH; cropW = videoH * (3 / 4); cropX = (videoW - cropW) / 2; cropY = 0; }
+
+        // Vẽ luồng video lên Canvas
+        ctx.drawImage(videoElement, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
+
+        // Đóng dấu thời gian
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('vi-VN', { hour12: false });
+        const dateStr = now.toLocaleDateString('vi-VN');
+
+        const wtmLogo = new Image();
+        wtmLogo.crossOrigin = "anonymous";
+        wtmLogo.src = 'wtm.png'; // Nhớ up file wtm.png lên cùng thư mục
+        
+        wtmLogo.onload = function() {
+            const logoW = canvas.width * 0.65; 
+            const logoH = (wtmLogo.height / wtmLogo.width) * logoW;
+            ctx.drawImage(wtmLogo, 60, canvas.height - 90 - logoH - 85, logoW, logoH);
+
+            ctx.font = `700 45px 'Manrope', sans-serif`;
+            ctx.fillStyle = "#ffffff";
+            ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 8;
+            ctx.fillText(timeStr + " | " + dateStr, 60, canvas.height - 90 - 30);
+            
+            finishPhotoProcessing(canvas);
+        };
+        wtmLogo.onerror = function() { // Fallback nếu thiếu logo
+            ctx.font = `700 45px 'Manrope', sans-serif`;
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText("AN VIỆT HOMES: " + timeStr + " | " + dateStr, 60, canvas.height - 50);
+            finishPhotoProcessing(canvas);
+        };
+    }
+
+    function finishPhotoProcessing(canvas) {
+        // Tắt camera
+        mediaStream.getTracks().forEach(track => track.stop());
+        document.getElementById('cameraBox').style.display = 'none';
+        
+        // Hiển thị ảnh kết quả
+        finalProcessedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        const resultImg = document.getElementById('resultImage');
+        resultImg.src = finalProcessedDataUrl;
+        resultImg.style.display = 'block';
+        
+        // Hiện nút Gửi thông tin
+        document.getElementById('btnSubmitCheckIn').style.display = 'block';
+    }
+
+    // 4. XÁC NHẬN GỬI CHECK-IN LÊN HỆ THỐNG BACKEND
+    function submitCheckIn() {
+        const saleStatus = document.getElementById('saleStatus').value;
+        const guestStatus = document.getElementById('guestStatus').value;
+        
+        // Lấy data ảnh (bỏ phần prefix 'data:image/jpeg;base64,')
+        const base64Photo = finalProcessedDataUrl.split(',')[1];
+        
+        document.getElementById('btnSubmitCheckIn').innerText = "Đang lưu trữ dữ liệu...";
+        
+        /* 
+        Ở ĐÂY SẼ LÀ ĐOẠN FETCH API GỬI VỀ GOOGLE SHEETS
+        Gửi các biến: action="checkin", id=currentRecordId, saleStatus, guestStatus, photoData=base64Photo
+        */
+        
+        setTimeout(() => {
+            alert("Đã ghi nhận Check-in thành công cho: " + document.getElementById('modalSaleName').innerText);
+            closeModal();
+            // Nút Check-out sẽ được mở khóa (bỏ disabled) sau khi Check-in thành công
+        }, 1500);
+    }
+
+    // 5. XÁC NHẬN CHECK-OUT KHI KHÁCH VỀ
+    function confirmCheckOut(id, saleName) {
+        if(confirm("Xác nhận Sale " + saleName + " và khách đã ra về? Hệ thống sẽ ghi nhận thời gian hiện tại.")) {
+            
+            /* 
+            Ở ĐÂY SẼ LÀ ĐOẠN FETCH API GỬI VỀ GOOGLE SHEETS
+            Gửi các biến: action="checkout", id=id
+            */
+            
+            alert("Ghi nhận Check-out thành công!");
+        }
+    }
+</script>
+
+</body>
+</html>

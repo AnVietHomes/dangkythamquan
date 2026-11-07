@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký tham quan dự án - An Việt Homes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* TÍCH HỢP DARK MODE / LIGHT MODE */
+        :root {
+            --bg-color: #dcf0fa; --card-bg: #fff; --text-main: #111; 
+            --border-color: #ccc; --primary-btn: #001a72; --primary-hover: #00104a;
+        }
+        [data-theme="dark"] {
+            --bg-color: #121212; --card-bg: #1e1e1e; --text-main: #f1f1f1; 
+            --border-color: #444; --primary-btn: #4facfe; --primary-hover: #00f2fe;
+        }
+        
+        body { background-color: var(--bg-color); font-family: 'Manrope', sans-serif; color: var(--text-main); transition: 0.3s; }
+        .form-container { background: var(--card-bg); max-width: 800px; margin: 30px auto; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .form-title { text-align: center; font-weight: 800; font-size: 24px; text-transform: uppercase; margin-bottom: 30px;}
+        
+        .row-item { display: flex; align-items: center; margin-bottom: 20px; }
+        .label-col { width: 35%; font-weight: 600; }
+        .input-col { width: 65%; }
+        input, select { width: 100%; border: none; border-bottom: 1px solid var(--border-color); background: transparent; color: var(--text-main); padding: 8px 0; font-family: 'Manrope', sans-serif; font-size: 16px; outline: none; }
+        input:focus { border-bottom: 2px solid var(--primary-btn); }
+        
+        .btn-submit { background: var(--primary-btn); color: #fff; border-radius: 30px; padding: 12px 40px; font-weight: 700; border: none; cursor: pointer; display: block; margin: 30px auto 0; transition: 0.3s;}
+        .btn-submit:hover { background: var(--primary-hover); }
+        
+        /* Nút Toggle Sáng Tối */
+        .theme-toggle { position: absolute; top: 20px; right: 20px; cursor: pointer; font-weight: bold; background: var(--card-bg); padding: 10px 15px; border-radius: 20px; border: 1px solid var(--border-color); color: var(--text-main);}
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">🌓 Đổi giao diện</button>
+    
+    <div class="form-container">
+        <div class="form-title">ĐĂNG KÝ THAM QUAN DỰ ÁN</div>
+        <form id="bookingForm">
+            <div class="row-item"><div class="label-col">Thời gian tham quan:</div><div class="input-col"><input type="datetime-local" id="timeVisit" required></div></div>
+            <div class="row-item"><div class="label-col">Họ và tên NVKD:</div><div class="input-col"><input type="text" id="name" required placeholder="Nguyễn Văn A"></div></div>
+            <div class="row-item"><div class="label-col">Số điện thoại:</div><div class="input-col"><input type="tel" id="phone" required></div></div>
+            <div class="row-item"><div class="label-col">Số CCCD:</div><div class="input-col"><input type="text" id="cccd" required></div></div>
+            <div class="row-item"><div class="label-col">Số lượng khách:</div><div class="input-col"><input type="number" id="guestCount" required></div></div>
+            <div class="row-item"><div class="label-col">Tổng số người:</div><div class="input-col"><input type="number" id="totalCount" required></div></div>
+            <div class="row-item"><div class="label-col">Biển số xe (nếu có):</div><div class="input-col"><input type="text" id="plate"></div></div>
+            <div class="row-item">
+                <div class="label-col">Mục đích:</div>
+                <div class="input-col">
+                    <label><input type="checkbox" class="purpose" value="Quay video Dự án" style="width:auto"> Quay video Dự án</label><br>
+                    <label><input type="checkbox" class="purpose" value="Dẫn khách tham quan" style="width:auto"> Dẫn khách tham quan</label>
+                </div>
+            </div>
+            <button type="submit" class="btn-submit" id="btnSubmit">Gửi Đăng Ký</button>
+        </form>
+    </div>
+
+    <script>
+        // Tắt bật Dark/Light mode
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+        }
+
+        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            btn.innerText = "Đang gửi..."; btn.disabled = true;
+
+            // Logic tính toán đăng ký muộn (< 50 phút)
+            const visitTime = new Date(document.getElementById('timeVisit').value).getTime();
+            const now = new Date().getTime();
+            const diffMinutes = (visitTime - now) / (1000 * 60);
+            const isLate = diffMinutes < 50; // Trả về true nếu < 50 phút
+
+            // Lấy dữ liệu mục đích
+            let purposes = [];
+            document.querySelectorAll('.purpose:checked').forEach(cb => purposes.push(cb.value));
+
+            // Đóng gói data
+            const formData = new URLSearchParams();
+            formData.append('thoiGianThamQuan', document.getElementById('timeVisit').value);
+            formData.append('tenNVKD', document.getElementById('name').value);
+            formData.append('sdt', document.getElementById('phone').value);
+            formData.append('cccd', document.getElementById('cccd').value);
+            formData.append('slKhach', document.getElementById('guestCount').value);
+            formData.append('tongNguoi', document.getElementById('totalCount').value);
+            formData.append('bienSo', document.getElementById('plate').value);
+            formData.append('mucDich', purposes.join(", "));
+            formData.append('isLate', isLate);
+
+            // Thay bằng Script URL của bạn
+            const SCRIPT_URL = 'YOUR_GOOGLE_SCRIPT_URL_HERE'; 
+
+            fetch(SCRIPT_URL, { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                alert("Đăng ký thành công!");
+                document.getElementById('bookingForm').reset();
+                btn.innerText = "Gửi Đăng Ký"; btn.disabled = false;
+            }).catch(err => { alert("Lỗi mạng!"); btn.innerText = "Gửi Đăng Ký"; btn.disabled = false; });
+        });
+    </script>
+</body>
+</html>
