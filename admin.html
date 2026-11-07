@@ -122,6 +122,7 @@
                         <th>NVKD</th>
                         <th>Thông tin khách</th>
                         <th>Lưu ý</th>
+                        <th>Ảnh Check-in</th>
                         <th>Thao tác Lễ tân</th>
                     </tr>
                 </thead>
@@ -224,14 +225,25 @@
                         let html = '';
                         result.data.forEach(item => {
                             let actionButtons = '';
+                            let photoBtn = '';
                             
-                            if (item.trangThaiCheckin === 'Chưa đến') {
-                                actionButtons = `<button class="btn btn-checkin" id="btn-in-${item.id}" onclick="openCheckInModal('${item.id}', '${item.tenNVKD}')">Khách đến (Check-in)</button>
-                                                 <button class="btn btn-checkout" id="btn-out-${item.id}" onclick="confirmCheckOut('${item.id}', '${item.tenNVKD}')" style="display:none;">Khách về (Check-out)</button>`;
-                            } else if (item.trangThaiCheckout === 'Chưa về') {
-                                actionButtons = `<button class="btn btn-checkout" id="btn-out-${item.id}" onclick="confirmCheckOut('${item.id}', '${item.tenNVKD}')" style="display:inline-block;">Khách về (Check-out)</button>`;
+                            // Nút Xem Ảnh
+                            if (item.anhCheckin && item.anhCheckin.startsWith('http')) {
+                                photoBtn = `<a href="${item.anhCheckin}" target="_blank" class="btn btn-secondary" style="font-size:12px; padding: 6px 12px; background:#17a2b8; text-decoration: none;">Xem ảnh</a>`;
+                            } else if (item.trangThaiCheckin !== 'Chưa đến') {
+                                photoBtn = `<span style="font-size:12px; color:#666;">Lỗi ảnh</span>`;
                             } else {
-                                actionButtons = `<span style="color:var(--success); font-weight:bold;">Đã hoàn thành</span>`;
+                                photoBtn = `<span style="font-size:12px; color:#999;">-</span>`;
+                            }
+
+                            // Trạng thái thao tác Lễ Tân
+                            if (item.trangThaiCheckin === 'Chưa đến') {
+                                actionButtons = `<button class="btn btn-checkin" onclick="openCheckInModal('${item.id}', '${item.tenNVKD}')">Check-in</button>`;
+                            } else if (item.trangThaiCheckout === 'Chưa về') {
+                                actionButtons = `<button class="btn btn-checkout" onclick="confirmCheckOut('${item.id}', '${item.tenNVKD}')" style="display:inline-block;">Check-out</button>`;
+                            } else {
+                                // Hiển thị thời gian check-out thay vì "Đã hoàn thành"
+                                actionButtons = `<div style="color:var(--success); font-weight:bold; font-size:13px; line-height: 1.4;">${item.trangThaiCheckout}</div>`;
                             }
 
                             let luuYBadge = item.luuY.includes('<50p') ? `<span class="badge-late">${item.luuY}</span>` : item.luuY;
@@ -247,9 +259,8 @@
                                 </td>
                                 <td data-label="Thông tin khách">Khách: ${item.slKhach} | Tổng: ${item.tongNguoi}</td>
                                 <td data-label="Lưu ý">${luuYBadge}</td>
-                                <td data-label="Thao tác Lễ tân" id="action-cell-${item.id}">
-                                    ${actionButtons}
-                                </td>
+                                <td data-label="Ảnh Check-in">${photoBtn}</td>
+                                <td data-label="Thao tác Lễ tân">${actionButtons}</td>
                             </tr>
                             `;
                         });
@@ -261,7 +272,7 @@
                 .catch(error => {
                     spinner.style.display = 'none';
                     loadingText.style.display = 'none';
-                    tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Lỗi kết nối khi tải dữ liệu! Vui lòng tải lại trang.</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Lỗi kết nối khi tải dữ liệu! Vui lòng tải lại trang.</td></tr>';
                 });
         }
 
@@ -306,7 +317,7 @@
         function takeSnapshot() {
             const videoElement = document.getElementById('webcamVideo');
             const canvas = document.getElementById('snapshotCanvas');
-            canvas.width = 800; canvas.height = 1066; // Giảm kích thước tối ưu hóa cho Apps Script
+            canvas.width = 800; canvas.height = 1066; 
             const ctx = canvas.getContext('2d');
             
             const videoW = videoElement.videoWidth; const videoH = videoElement.videoHeight;
@@ -330,7 +341,6 @@
                 ctx.drawImage(wtmLogo, 40, canvas.height - 70 - logoH - 50, logoW, logoH);
                 ctx.font = `700 35px 'Manrope', sans-serif`; ctx.fillStyle = "#ffffff"; ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 6;
                 ctx.fillText(timeStr + " | " + dateStr, 40, canvas.height - 70 - 20);
-                
                 showPreview(canvas);
             };
             wtmLogo.onerror = function() { 
@@ -341,7 +351,6 @@
         }
 
         function showPreview(canvas) {
-            // Nén chất lượng ảnh xuống 0.7 để dung lượng nhẹ, tránh lỗi mạng trên Google Apps Script
             finalProcessedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
             document.getElementById('webcamVideo').style.display = 'none';
             const resImg = document.getElementById('resultImage');
@@ -367,57 +376,49 @@
         }
 
         function submitFinalData() {
-    const btnSubmit = document.getElementById('btnSubmitFinal');
-    btnSubmit.innerText = "ĐANG TẢI ẢNH VÀ LƯU...";
-    btnSubmit.disabled = true;
+            const btnSubmit = document.getElementById('btnSubmitFinal');
+            btnSubmit.innerText = "ĐANG TẢI ẢNH VÀ LƯU...";
+            btnSubmit.disabled = true;
 
-    // Sử dụng FormData chuẩn thay vì URLSearchParams để không bị phình dung lượng Base64
-    const formData = new FormData();
-    formData.append('action', 'checkin');
-    formData.append('id', currentRecordId);
-    formData.append('saleStatus', document.getElementById('saleStatus').value);
-    formData.append('guestStatus', document.getElementById('guestStatus').value);
-    
-    // Xử lý chuỗi Base64: thay thế khoảng trắng thành dấu '+' (nếu có) để tránh lỗi truyền tải
-    let base64String = finalProcessedDataUrl.split(',')[1];
-    formData.append('photoBase64', base64String); 
-    
-    fetch(SCRIPT_URL, { 
-        method: 'POST', 
-        body: formData 
-    })
-    .then(res => res.text()) // Lấy text thô để bắt được lỗi HTML từ Google (nếu có)
-    .then(text => {
-        try {
-            const data = JSON.parse(text); // Ép kiểu về JSON
-            if (data.status === 'success') {
-                alert("Check-in thành công và đã lưu ảnh vào Drive!");
-                closeModal('checkInModal');
-                
-                document.getElementById('btn-in-' + currentRecordId).style.display = 'none';
-                document.getElementById('btn-out-' + currentRecordId).style.display = 'inline-block';
-            } else {
-                alert("Lỗi Backend: " + (data.message || "Không xác định"));
-            }
-        } catch (e) {
-            // Nếu Google trả về trang web báo lỗi thay vì JSON, báo lỗi chi tiết ra màn hình
-            console.error("Lỗi thô từ Google:", text);
-            alert("Lỗi máy chủ Google Apps Script. Vui lòng nhấn F12, xem tab Console để biết chi tiết lỗi.");
+            const formData = new FormData();
+            formData.append('action', 'checkin');
+            formData.append('id', currentRecordId);
+            formData.append('saleStatus', document.getElementById('saleStatus').value);
+            formData.append('guestStatus', document.getElementById('guestStatus').value);
+            
+            let base64String = finalProcessedDataUrl.split(',')[1];
+            formData.append('photoBase64', base64String); 
+            
+            fetch(SCRIPT_URL, { method: 'POST', body: formData })
+            .then(res => res.text())
+            .then(text => {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.status === 'success') {
+                        alert("Check-in thành công và đã lưu ảnh vào Drive!");
+                        closeModal('checkInModal');
+                        fetchData(); // Tự động load lại bảng để hiện ngay nút Xem ảnh
+                    } else {
+                        alert("Lỗi Backend: " + (data.message || "Không xác định"));
+                    }
+                } catch (e) {
+                    console.error("Lỗi thô từ Google:", text);
+                    alert("Lỗi máy chủ Google. Vui lòng xem tab Console để biết chi tiết.");
+                }
+                btnSubmit.innerText = "XÁC NHẬN GỬI LÊN HỆ THỐNG";
+                btnSubmit.disabled = false;
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Bị trình duyệt chặn hoặc mất mạng: " + err.message);
+                btnSubmit.innerText = "XÁC NHẬN GỬI LÊN HỆ THỐNG";
+                btnSubmit.disabled = false;
+            });
         }
-        btnSubmit.innerText = "XÁC NHẬN GỬI LÊN HỆ THỐNG";
-        btnSubmit.disabled = false;
-    })
-    .catch(err => {
-        console.error(err);
-        alert("Bị trình duyệt chặn hoặc mất mạng: " + err.message);
-        btnSubmit.innerText = "XÁC NHẬN GỬI LÊN HỆ THỐNG";
-        btnSubmit.disabled = false;
-    });
-}
 
         function confirmCheckOut(id, saleName) {
             if(confirm("Xác nhận Sale " + saleName + " và khách đã ra về?")) {
-                const formData = new URLSearchParams();
+                const formData = new FormData();
                 formData.append('action', 'checkout');
                 formData.append('id', id);
 
@@ -425,8 +426,7 @@
                 .then(res => res.json())
                 .then(data => {
                     alert("Ghi nhận Check-out thành công!");
-                    document.getElementById('btn-out-' + id).style.display = 'none';
-                    document.getElementById('action-cell-' + id).innerHTML = '<span style="color:var(--success); font-weight:bold;">Đã hoàn thành</span>';
+                    fetchData(); // Tự động load lại bảng để hiện ngay Thời gian Check-out
                 });
             }
         }
