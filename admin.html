@@ -87,15 +87,10 @@
         .camera-actions .btn { flex: 1; }
         .status-msg { font-size: 14px; color: var(--success); font-weight: 700; text-align: center; margin: 15px 0; display: none;}
         
-        /* MODAL XEM ẢNH POPUP */
-        #imageModalOverlay { z-index: 3000; background: rgba(0,0,0,0.9); }
-        #fullSizeImage { max-width: 100%; max-height: 85vh; border-radius: 8px; object-fit: contain; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .loading-text { text-align: center; font-size: 14px; font-weight: 600; margin-top: 10px; display: none; }
         
-        /* Refresh Icon Animation */
         .refresh-status { font-size: 12px; color: #888; text-align: right; margin-bottom: 10px; display: flex; align-items: center; justify-content: flex-end; gap: 5px; }
         .dot { width: 8px; height: 8px; background-color: var(--success); border-radius: 50%; display: inline-block; animation: blink 1.5s infinite;}
         @keyframes blink { 0% {opacity: 1;} 50% {opacity: 0.3;} 100% {opacity: 1;} }
@@ -143,14 +138,6 @@
             <div class="loader" id="loadingSpinner"></div>
             <div class="loading-text" id="loadingText">Đang tải dữ liệu đăng ký tham quan...</div>
             <div id="noDataMessage" style="text-align: center; padding: 20px; font-weight: 600; display: none;">Chưa có dữ liệu đăng ký tham quan.</div>
-        </div>
-    </div>
-
-    <!-- POPUP XEM ẢNH TRỰC TIẾP -->
-    <div class="modal-overlay" id="imageModalOverlay" onclick="closeImageModal(event)">
-        <div style="position: relative; max-width: 90%; text-align: center;">
-            <span class="close-btn" onclick="closeImageModal()" style="color: white; right: -30px; top: -30px; font-size: 35px;">&times;</span>
-            <img id="fullSizeImage" src="" alt="Ảnh Check-in">
         </div>
     </div>
 
@@ -217,14 +204,12 @@
         let currentRecordId = '';
         let mediaStream = null;
         let finalProcessedDataUrl = "";
-        let autoRefreshInterval; // Biến chứa vòng lặp tải tự động
+        let autoRefreshInterval;
 
         document.addEventListener('DOMContentLoaded', () => {
-            fetchData(true); // Lần đầu tải có hiện xoay xoay
-            
-            // Thiết lập Auto-refresh ngầm mỗi 15 giây (Polling giả lập Realtime)
+            fetchData(true);
             autoRefreshInterval = setInterval(() => {
-                fetchData(false); // Các lần sau tải ngầm, không xoay xoay
+                fetchData(false);
             }, 15000); 
         });
 
@@ -249,9 +234,9 @@
                             let actionButtons = '';
                             let photoBtn = '';
                             
-                            // Nút Xem Ảnh Popup trực tiếp
+                            // Nút Xem Ảnh mở tab mới trên trình duyệt
                             if (item.anhCheckin && item.anhCheckin.startsWith('http')) {
-                                photoBtn = `<button type="button" class="btn btn-secondary" style="font-size:12px; padding: 6px 12px; background:#17a2b8;" onclick="viewImage('${item.anhCheckin}')">Xem ảnh</button>`;
+                                photoBtn = `<a href="${item.anhCheckin}" target="_blank" class="btn btn-secondary" style="font-size:12px; padding: 6px 12px; background:#17a2b8; text-decoration: none;">Xem ảnh</a>`;
                             } else if (item.trangThaiCheckin !== 'Chưa đến') {
                                 photoBtn = `<span style="font-size:12px; color:#666;">Lỗi ảnh</span>`;
                             } else {
@@ -295,27 +280,6 @@
                     if(showLoading) { spinner.style.display = 'none'; loadingText.style.display = 'none'; }
                     console.log("Lỗi tải ngầm dữ liệu:", error);
                 });
-        }
-
-        // HÀM XỬ LÝ POPUP XEM ẢNH TRỰC TIẾP
-        function viewImage(driveUrl) {
-            let directImageUrl = driveUrl;
-            // Ép Google Drive trả về link ảnh nhúng trực tiếp (thay /view bằng /uc?id=)
-            if (driveUrl.includes('drive.google.com/file/d/')) {
-                const fileId = driveUrl.split('/d/')[1].split('/view')[0];
-                directImageUrl = `https://drive.google.com/uc?id=${fileId}`;
-            }
-            
-            document.getElementById('fullSizeImage').src = directImageUrl;
-            document.getElementById('imageModalOverlay').style.display = 'flex';
-        }
-
-        function closeImageModal(event) {
-            // Đóng modal khi bấm nút X hoặc bấm ra ngoài màn hình đen
-            if (!event || event.target.id === 'imageModalOverlay' || event.target.className === 'close-btn') {
-                document.getElementById('imageModalOverlay').style.display = 'none';
-                document.getElementById('fullSizeImage').src = '';
-            }
         }
 
         function openCheckInModal(id, saleName) {
@@ -436,7 +400,7 @@
                     if (data.status === 'success') {
                         alert("Check-in thành công!");
                         closeModal('checkInModal');
-                        fetchData(false); // Cập nhật lại dòng ngay lập tức
+                        fetchData(false);
                     } else {
                         alert("Lỗi Backend: " + (data.message || "Không xác định"));
                     }
