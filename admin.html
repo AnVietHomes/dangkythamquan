@@ -69,6 +69,7 @@
             .btn { width: 100%; text-align: center; }
         }
 
+        /* MODAL CHUNG */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
         .modal-box { background: var(--card-bg); width: 100%; max-width: 450px; padding: 30px; border-radius: 12px; position: relative; max-height: 95vh; overflow-y: auto; }
         .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: var(--text-main); font-weight: bold;}
@@ -77,19 +78,27 @@
         .form-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px;}
         .form-select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Manrope', sans-serif; font-size: 14px; background: transparent; color: var(--text-main); }
         
+        /* MODAL CAMERA */
         #cameraOverlay { z-index: 2000; background: rgba(0,0,0,0.95); }
         .camera-box { position: relative; width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 8px; overflow: hidden; display: flex; justify-content: center; align-items: center;}
         #webcamVideo { width: 100%; height: 100%; object-fit: cover; }
         #resultImage { width: 100%; height: 100%; object-fit: cover; display: none; }
-        
         .camera-actions { display: flex; gap: 10px; margin-top: 15px; width: 100%;}
         .camera-actions .btn { flex: 1; }
-
         .status-msg { font-size: 14px; color: var(--success); font-weight: 700; text-align: center; margin: 15px 0; display: none;}
+        
+        /* MODAL XEM ẢNH POPUP */
+        #imageModalOverlay { z-index: 3000; background: rgba(0,0,0,0.9); }
+        #fullSizeImage { max-width: 100%; max-height: 85vh; border-radius: 8px; object-fit: contain; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .loading-text { text-align: center; font-size: 14px; font-weight: 600; margin-top: 10px; display: none; }
+        
+        /* Refresh Icon Animation */
+        .refresh-status { font-size: 12px; color: #888; text-align: right; margin-bottom: 10px; display: flex; align-items: center; justify-content: flex-end; gap: 5px; }
+        .dot { width: 8px; height: 8px; background-color: var(--success); border-radius: 50%; display: inline-block; animation: blink 1.5s infinite;}
+        @keyframes blink { 0% {opacity: 1;} 50% {opacity: 0.3;} 100% {opacity: 1;} }
     </style>
 </head>
 <body>
@@ -113,6 +122,7 @@
     </div>
 
     <div class="admin-container">
+        <div class="refresh-status"><span class="dot"></span> Tự động cập nhật mỗi 15s</div>
         <div class="table-responsive">
             <table>
                 <thead>
@@ -136,7 +146,15 @@
         </div>
     </div>
 
-    <!-- POPUP 1 -->
+    <!-- POPUP XEM ẢNH TRỰC TIẾP -->
+    <div class="modal-overlay" id="imageModalOverlay" onclick="closeImageModal(event)">
+        <div style="position: relative; max-width: 90%; text-align: center;">
+            <span class="close-btn" onclick="closeImageModal()" style="color: white; right: -30px; top: -30px; font-size: 35px;">&times;</span>
+            <img id="fullSizeImage" src="" alt="Ảnh Check-in">
+        </div>
+    </div>
+
+    <!-- POPUP XÁC NHẬN CHECK-IN -->
     <div class="modal-overlay" id="checkInModal">
         <div class="modal-box">
             <span class="close-btn" onclick="closeModal('checkInModal')">&times;</span>
@@ -150,7 +168,6 @@
                     <option value="Không đủ">Không đủ / Sai lệch</option>
                 </select>
             </div>
-            
             <div class="form-group">
                 <label>2. Số lượng Khách hàng đến dự án:</label>
                 <select class="form-select" id="guestStatus">
@@ -158,7 +175,6 @@
                     <option value="Không đủ">Không đủ / Sai lệch</option>
                 </select>
             </div>
-            
             <div id="photoStatus" class="status-msg">Đã đính kèm ảnh xác minh!</div>
             
             <button type="button" class="btn btn-full btn-checkin" id="btnOpenPhoto" onclick="openCameraLayer()">CHỤP ẢNH XÁC NHẬN</button>
@@ -166,7 +182,7 @@
         </div>
     </div>
 
-    <!-- POPUP 2: CAMERA -->
+    <!-- POPUP CAMERA -->
     <div class="modal-overlay" id="cameraOverlay">
         <div class="modal-box" style="padding: 20px; background: #222;">
             <h3 style="color: #fff; text-align: center; margin-top:0; font-size: 16px;">GHI HÌNH TIMEMARK</h3>
@@ -201,35 +217,41 @@
         let currentRecordId = '';
         let mediaStream = null;
         let finalProcessedDataUrl = "";
+        let autoRefreshInterval; // Biến chứa vòng lặp tải tự động
 
-        document.addEventListener('DOMContentLoaded', fetchData);
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData(true); // Lần đầu tải có hiện xoay xoay
+            
+            // Thiết lập Auto-refresh ngầm mỗi 15 giây (Polling giả lập Realtime)
+            autoRefreshInterval = setInterval(() => {
+                fetchData(false); // Các lần sau tải ngầm, không xoay xoay
+            }, 15000); 
+        });
 
-        function fetchData() {
+        function fetchData(showLoading = false) {
             const tableBody = document.getElementById('dataTableBody');
             const spinner = document.getElementById('loadingSpinner');
             const loadingText = document.getElementById('loadingText');
             const noDataMsg = document.getElementById('noDataMessage');
 
-            spinner.style.display = 'block';
-            loadingText.style.display = 'block';
-            tableBody.innerHTML = '';
-            noDataMsg.style.display = 'none';
+            if(showLoading) { spinner.style.display = 'block'; loadingText.style.display = 'block'; }
 
             fetch(SCRIPT_URL + "?action=getData")
                 .then(response => response.json())
                 .then(result => {
-                    spinner.style.display = 'none';
-                    loadingText.style.display = 'none';
+                    if(showLoading) { spinner.style.display = 'none'; loadingText.style.display = 'none'; }
 
                     if (result.status === 'success' && result.data.length > 0) {
                         let html = '';
+                        noDataMsg.style.display = 'none';
+                        
                         result.data.forEach(item => {
                             let actionButtons = '';
                             let photoBtn = '';
                             
-                            // Nút Xem Ảnh
+                            // Nút Xem Ảnh Popup trực tiếp
                             if (item.anhCheckin && item.anhCheckin.startsWith('http')) {
-                                photoBtn = `<a href="${item.anhCheckin}" target="_blank" class="btn btn-secondary" style="font-size:12px; padding: 6px 12px; background:#17a2b8; text-decoration: none;">Xem ảnh</a>`;
+                                photoBtn = `<button type="button" class="btn btn-secondary" style="font-size:12px; padding: 6px 12px; background:#17a2b8;" onclick="viewImage('${item.anhCheckin}')">Xem ảnh</button>`;
                             } else if (item.trangThaiCheckin !== 'Chưa đến') {
                                 photoBtn = `<span style="font-size:12px; color:#666;">Lỗi ảnh</span>`;
                             } else {
@@ -242,7 +264,6 @@
                             } else if (item.trangThaiCheckout === 'Chưa về') {
                                 actionButtons = `<button class="btn btn-checkout" onclick="confirmCheckOut('${item.id}', '${item.tenNVKD}')" style="display:inline-block;">Check-out</button>`;
                             } else {
-                                // Hiển thị thời gian check-out thay vì "Đã hoàn thành"
                                 actionButtons = `<div style="color:var(--success); font-weight:bold; font-size:13px; line-height: 1.4;">${item.trangThaiCheckout}</div>`;
                             }
 
@@ -266,25 +287,44 @@
                         });
                         tableBody.innerHTML = html;
                     } else {
+                        tableBody.innerHTML = '';
                         noDataMsg.style.display = 'block';
                     }
                 })
                 .catch(error => {
-                    spinner.style.display = 'none';
-                    loadingText.style.display = 'none';
-                    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Lỗi kết nối khi tải dữ liệu! Vui lòng tải lại trang.</td></tr>';
+                    if(showLoading) { spinner.style.display = 'none'; loadingText.style.display = 'none'; }
+                    console.log("Lỗi tải ngầm dữ liệu:", error);
                 });
+        }
+
+        // HÀM XỬ LÝ POPUP XEM ẢNH TRỰC TIẾP
+        function viewImage(driveUrl) {
+            let directImageUrl = driveUrl;
+            // Ép Google Drive trả về link ảnh nhúng trực tiếp (thay /view bằng /uc?id=)
+            if (driveUrl.includes('drive.google.com/file/d/')) {
+                const fileId = driveUrl.split('/d/')[1].split('/view')[0];
+                directImageUrl = `https://drive.google.com/uc?id=${fileId}`;
+            }
+            
+            document.getElementById('fullSizeImage').src = directImageUrl;
+            document.getElementById('imageModalOverlay').style.display = 'flex';
+        }
+
+        function closeImageModal(event) {
+            // Đóng modal khi bấm nút X hoặc bấm ra ngoài màn hình đen
+            if (!event || event.target.id === 'imageModalOverlay' || event.target.className === 'close-btn') {
+                document.getElementById('imageModalOverlay').style.display = 'none';
+                document.getElementById('fullSizeImage').src = '';
+            }
         }
 
         function openCheckInModal(id, saleName) {
             currentRecordId = id;
             document.getElementById('modalSaleName').innerText = saleName;
-            
             document.getElementById('photoStatus').style.display = 'none';
             document.getElementById('btnOpenPhoto').style.display = 'block';
             document.getElementById('btnSubmitFinal').style.display = 'none';
             finalProcessedDataUrl = "";
-            
             document.getElementById('checkInModal').style.display = 'flex';
         }
 
@@ -356,7 +396,6 @@
             const resImg = document.getElementById('resultImage');
             resImg.src = finalProcessedDataUrl;
             resImg.style.display = 'block';
-
             document.getElementById('actionCapture').style.display = 'none';
             document.getElementById('actionConfirm').style.display = 'flex';
         }
@@ -395,22 +434,20 @@
                 try {
                     const data = JSON.parse(text);
                     if (data.status === 'success') {
-                        alert("Check-in thành công và đã lưu ảnh vào Drive!");
+                        alert("Check-in thành công!");
                         closeModal('checkInModal');
-                        fetchData(); // Tự động load lại bảng để hiện ngay nút Xem ảnh
+                        fetchData(false); // Cập nhật lại dòng ngay lập tức
                     } else {
                         alert("Lỗi Backend: " + (data.message || "Không xác định"));
                     }
                 } catch (e) {
-                    console.error("Lỗi thô từ Google:", text);
-                    alert("Lỗi máy chủ Google. Vui lòng xem tab Console để biết chi tiết.");
+                    alert("Lỗi máy chủ Google.");
                 }
                 btnSubmit.innerText = "XÁC NHẬN GỬI LÊN HỆ THỐNG";
                 btnSubmit.disabled = false;
             })
             .catch(err => {
-                console.error(err);
-                alert("Bị trình duyệt chặn hoặc mất mạng: " + err.message);
+                alert("Lỗi mạng: " + err.message);
                 btnSubmit.innerText = "XÁC NHẬN GỬI LÊN HỆ THỐNG";
                 btnSubmit.disabled = false;
             });
@@ -426,7 +463,7 @@
                 .then(res => res.json())
                 .then(data => {
                     alert("Ghi nhận Check-out thành công!");
-                    fetchData(); // Tự động load lại bảng để hiện ngay Thời gian Check-out
+                    fetchData(false); 
                 });
             }
         }
