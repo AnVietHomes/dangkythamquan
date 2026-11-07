@@ -40,9 +40,11 @@
         .form-container { background: var(--card-bg); max-width: 800px; margin: 20px auto 50px; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); width: 90%; }
         .form-title { text-align: center; font-weight: 800; font-size: 24px; text-transform: uppercase; margin-bottom: 30px; color: var(--header-text);}
         
-        .row-item { display: flex; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
-        .label-col { width: 35%; font-weight: 600; margin-bottom: 5px; }
-        .input-col { width: 65%; }
+        /* FLEXBOX ĐỂ ÉP CÙNG 1 DÒNG */
+        .row-item { display: flex; align-items: flex-end; margin-bottom: 25px; flex-wrap: nowrap; gap: 15px;}
+        .label-col { width: 35%; font-weight: 600; padding-bottom: 8px; flex-shrink: 0;}
+        .input-col { width: 65%; flex-grow: 1;}
+        
         input, select { width: 100%; border: none; border-bottom: 1px solid var(--border-color); background: transparent; color: var(--text-main); padding: 8px 0; font-family: 'Manrope', sans-serif; font-size: 16px; outline: none; transition: 0.3s; }
         input:focus, select:focus { border-bottom: 2px solid var(--primary-btn); }
         
@@ -50,9 +52,9 @@
         [data-theme="dark"] { --icon-invert: 1; }
         
         /* ĐỊNH DẠNG Ô CHỌN THỜI GIAN KÉP */
-        .time-date-group { display: flex; align-items: center; gap: 15px; width: 100%; }
-        .time-date-group .time-input { width: 100px; text-align: center; letter-spacing: 1px; font-weight: 700; }
-        .time-date-group .date-input { flex: 1; }
+        .time-date-group { display: flex; align-items: center; gap: 10px; width: 100%; }
+        .time-date-group .time-input { width: 80px; text-align: center; font-weight: 700; flex-shrink: 0;}
+        .time-date-group .date-input { flex-grow: 1; min-width: 120px; }
         .time-date-group .separator { font-weight: 700; color: var(--text-main); }
         
         .checkbox-group label { display: inline-block; width: auto; margin-right: 15px; cursor: pointer; font-weight: 500; }
@@ -64,7 +66,9 @@
         @media (max-width: 768px) {
             .top-header { padding: 15px 20px; flex-direction: column; align-items: flex-start; }
             .theme-switch-wrapper { align-self: flex-end; }
-            .label-col, .input-col { width: 100%; }
+            .row-item { flex-direction: column; align-items: flex-start; gap: 5px; margin-bottom: 20px;}
+            .label-col { width: 100%; padding-bottom: 0;}
+            .input-col { width: 100%; }
             .form-container { padding: 25px; margin-top: 10px; }
         }
     </style>
@@ -89,7 +93,7 @@
     <div class="form-container">
         <div class="form-title">ĐĂNG KÝ THAM QUAN DỰ ÁN</div>
         <form id="bookingForm">
-            <!-- Thay đổi khối thời gian -->
+            <!-- Khối thời gian đã ép trên 1 dòng -->
             <div class="row-item">
                 <div class="label-col">Thời gian tham quan:</div>
                 <div class="input-col time-date-group">
@@ -118,24 +122,16 @@
     </div>
 
     <script>
-        // Xử lý Dark/Light Mode
         document.getElementById('themeToggle').addEventListener('change', function() {
             const html = document.documentElement;
             const logo = document.getElementById('mainLogo');
-            
-            if (this.checked) {
-                html.setAttribute('data-theme', 'dark');
-                if (logo) logo.src = 'logodark.svg';
-            } else {
-                html.setAttribute('data-theme', 'light');
-                if (logo) logo.src = 'logo.svg';
-            }
+            if (this.checked) { html.setAttribute('data-theme', 'dark'); if (logo) logo.src = 'logodark.svg'; } 
+            else { html.setAttribute('data-theme', 'light'); if (logo) logo.src = 'logo.svg'; }
         });
 
-        // Tự động định dạng giờ và kiểm tra hợp lệ
         const timeInput = document.getElementById('visitTime');
         timeInput.addEventListener('input', function(e) {
-            let val = this.value.replace(/\D/g, ''); // Xóa chữ, chỉ giữ số
+            let val = this.value.replace(/\D/g, ''); 
             if (val.length >= 3) {
                 this.value = val.substring(0, 2) + ':' + val.substring(2, 4);
             } else {
@@ -144,7 +140,7 @@
         });
         
         timeInput.addEventListener('blur', function() {
-            const regex = /^([01]\d|2[0-3]):([0-5]\d)$/; // Validate hệ 24h
+            const regex = /^([01]\d|2[0-3]):([0-5]\d)$/; 
             if (this.value && !regex.test(this.value)) {
                 alert("Vui lòng nhập giờ hợp lệ theo định dạng 24h (Ví dụ: 14:30)");
                 this.value = '';
@@ -156,16 +152,14 @@
             const btn = document.getElementById('btnSubmit');
             btn.innerText = "ĐANG GỬI..."; btn.disabled = true;
 
-            const visitTimeStr = document.getElementById('visitTime').value; // HH:mm
-            const visitDateStr = document.getElementById('visitDate').value; // YYYY-MM-DD
+            const visitTimeStr = document.getElementById('visitTime').value; 
+            const visitDateStr = document.getElementById('visitDate').value; 
             
-            // Tính toán đăng ký gấp (< 50 phút)
             const visitDateTime = new Date(`${visitDateStr}T${visitTimeStr}:00`).getTime();
             const now = new Date().getTime();
             const diffMinutes = (visitDateTime - now) / (1000 * 60);
             const isLate = diffMinutes < 50; 
 
-            // Cấu trúc lại chuỗi hiển thị lên bảng: Giờ:Phút - Ngày/Tháng/Năm
             const dateParts = visitDateStr.split('-');
             const formattedTimeVisit = `${visitTimeStr} - ${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
 
