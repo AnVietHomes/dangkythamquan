@@ -18,7 +18,7 @@
         }
         
         * { box-sizing: border-box; }
-        body { background-color: var(--bg-color); font-family: 'Manrope', sans-serif; color: var(--text-main); margin: 0; padding: 0; transition: 0.3s; }
+        body { background-color: var(--bg-color); font-family: 'Manrope', sans-serif; color: var(--text-main); margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
         
         /* HEADER ADMIN */
         .admin-header { background: var(--card-bg); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px;}
@@ -91,6 +91,11 @@
         .camera-actions .btn { flex: 1; }
 
         .status-msg { font-size: 14px; color: var(--success); font-weight: 700; text-align: center; margin: 15px 0; display: none;}
+        
+        /* LOADING SPINNER */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { text-align: center; font-size: 14px; font-weight: 600; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -127,23 +132,13 @@
                     </tr>
                 </thead>
                 <tbody id="dataTableBody">
-                    <tr>
-                        <td data-label="Thời gian gửi đơn">10:15 - 08/11/2026</td>
-                        <td data-label="Thời gian dự kiến">14:30 - 08/11/2026</td>
-                        <td data-label="NVKD">
-                            <strong>Nguyễn Văn A</strong><br>
-                            <small>Phòng: Khối 1</small><br>
-                            <small>SĐT: 0987654321</small>
-                        </td>
-                        <td data-label="Thông tin khách">Khách: 2 | Tổng: 3</td>
-                        <td data-label="Lưu ý"><span class="badge-late">Đăng ký gấp (<50p)</span></td>
-                        <td data-label="Thao tác Lễ tân" id="action-cell-ID_001">
-                            <button class="btn btn-checkin" id="btn-in-ID_001" onclick="openCheckInModal('ID_001', 'Nguyễn Văn A')">Khách đến (Check-in)</button>
-                            <button class="btn btn-checkout" id="btn-out-ID_001" onclick="confirmCheckOut('ID_001', 'Nguyễn Văn A')">Khách về (Check-out)</button>
-                        </td>
-                    </tr>
+                    <!-- Dữ liệu sẽ được tự động đổ vào đây thông qua JavaScript -->
                 </tbody>
             </table>
+            
+            <div class="loader" id="loadingSpinner"></div>
+            <div class="loading-text" id="loadingText">Đang tải dữ liệu đăng ký tham quan...</div>
+            <div id="noDataMessage" style="text-align: center; padding: 20px; font-weight: 600; display: none;">Chưa có dữ liệu đăng ký tham quan.</div>
         </div>
     </div>
 
@@ -202,6 +197,8 @@
     </div>
 
     <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyE1t53Uq6B12d2QUgn2t8wvJuL4_o2MOFHZzaIKjDFH5_3tQb341RcRJpNaBueczDPwQ/exec'; 
+        
         document.getElementById('themeToggleAdmin').addEventListener('change', function() {
             const html = document.documentElement;
             const logo = document.getElementById('adminLogo');
@@ -213,11 +210,76 @@
         let mediaStream = null;
         let finalProcessedDataUrl = "";
 
+        // Gọi hàm fetch data ngay khi tải trang
+        document.addEventListener('DOMContentLoaded', fetchData);
+
+        function fetchData() {
+            const tableBody = document.getElementById('dataTableBody');
+            const spinner = document.getElementById('loadingSpinner');
+            const loadingText = document.getElementById('loadingText');
+            const noDataMsg = document.getElementById('noDataMessage');
+
+            spinner.style.display = 'block';
+            loadingText.style.display = 'block';
+            tableBody.innerHTML = '';
+            noDataMsg.style.display = 'none';
+
+            fetch(SCRIPT_URL + "?action=getData")
+                .then(response => response.json())
+                .then(result => {
+                    spinner.style.display = 'none';
+                    loadingText.style.display = 'none';
+
+                    if (result.status === 'success' && result.data.length > 0) {
+                        let html = '';
+                        // Render dữ liệu từ mảng trả về (mới nhất lên đầu)
+                        result.data.forEach(item => {
+                            let actionButtons = '';
+                            
+                            if (item.trangThaiCheckin === 'Chưa đến') {
+                                actionButtons = `<button class="btn btn-checkin" id="btn-in-${item.id}" onclick="openCheckInModal('${item.id}', '${item.tenNVKD}')">Khách đến (Check-in)</button>
+                                                 <button class="btn btn-checkout" id="btn-out-${item.id}" onclick="confirmCheckOut('${item.id}', '${item.tenNVKD}')" style="display:none;">Khách về (Check-out)</button>`;
+                            } else if (item.trangThaiCheckout === 'Chưa về') {
+                                actionButtons = `<button class="btn btn-checkout" id="btn-out-${item.id}" onclick="confirmCheckOut('${item.id}', '${item.tenNVKD}')" style="display:inline-block;">Khách về (Check-out)</button>`;
+                            } else {
+                                actionButtons = `<span style="color:var(--success); font-weight:bold;">Đã hoàn thành</span>`;
+                            }
+
+                            let luuYBadge = item.luuY.includes('<50p') ? `<span class="badge-late">${item.luuY}</span>` : item.luuY;
+
+                            html += `
+                            <tr>
+                                <td data-label="Thời gian gửi đơn">${item.thoiGianGui}</td>
+                                <td data-label="Thời gian dự kiến">${item.thoiGianDuKien}</td>
+                                <td data-label="NVKD">
+                                    <strong>${item.tenNVKD}</strong><br>
+                                    <small>Phòng: ${item.phong}</small><br>
+                                    <small>SĐT: ${item.sdt}</small>
+                                </td>
+                                <td data-label="Thông tin khách">Khách: ${item.slKhach} | Tổng: ${item.tongNguoi}</td>
+                                <td data-label="Lưu ý">${luuYBadge}</td>
+                                <td data-label="Thao tác Lễ tân" id="action-cell-${item.id}">
+                                    ${actionButtons}
+                                </td>
+                            </tr>
+                            `;
+                        });
+                        tableBody.innerHTML = html;
+                    } else {
+                        noDataMsg.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    spinner.style.display = 'none';
+                    loadingText.style.display = 'none';
+                    tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Lỗi kết nối khi tải dữ liệu! Vui lòng tải lại trang.</td></tr>';
+                });
+        }
+
         function openCheckInModal(id, saleName) {
             currentRecordId = id;
             document.getElementById('modalSaleName').innerText = saleName;
             
-            // Đặt lại Popup 1
             document.getElementById('photoStatus').style.display = 'none';
             document.getElementById('btnOpenPhoto').style.display = 'block';
             document.getElementById('btnSubmitFinal').style.display = 'none';
@@ -230,7 +292,6 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
-        // --- XỬ LÝ LỚP CAMERA TRỰC TIẾP ---
         function openCameraLayer() {
             document.getElementById('cameraOverlay').style.display = 'flex';
             document.getElementById('resultImage').style.display = 'none';
@@ -310,19 +371,14 @@
 
         function confirmPhoto() {
             closeCameraLayer();
-            
-            // Xử lý Popup 1 sau khi có ảnh
             document.getElementById('photoStatus').style.display = 'block';
             document.getElementById('btnOpenPhoto').style.display = 'none';
             document.getElementById('btnSubmitFinal').style.display = 'block';
         }
 
-        // --- GỬI DỮ LIỆU CUỐI CÙNG LÊN BACKEND ---
         function submitFinalData() {
             document.getElementById('btnSubmitFinal').innerText = "ĐANG TẢI ẢNH VÀ LƯU...";
             document.getElementById('btnSubmitFinal').disabled = true;
-
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyE1t53Uq6B12d2QUgn2t8wvJuL4_o2MOFHZzaIKjDFH5_3tQb341RcRJpNaBueczDPwQ/exec'; 
 
             const formData = new URLSearchParams();
             formData.append('action', 'checkin');
@@ -351,14 +407,16 @@
 
         function confirmCheckOut(id, saleName) {
             if(confirm("Xác nhận Sale " + saleName + " và khách đã ra về?")) {
-                const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyE1t53Uq6B12d2QUgn2t8wvJuL4_o2MOFHZzaIKjDFH5_3tQb341RcRJpNaBueczDPwQ/exec'; 
                 const formData = new URLSearchParams();
                 formData.append('action', 'checkout');
                 formData.append('id', id);
 
-                fetch(SCRIPT_URL, { method: 'POST', body: formData }).then(res => res.json()).then(data => {
+                fetch(SCRIPT_URL, { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
                     alert("Ghi nhận Check-out thành công!");
                     document.getElementById('btn-out-' + id).style.display = 'none';
+                    document.getElementById('action-cell-' + id).innerHTML = '<span style="color:var(--success); font-weight:bold;">Đã hoàn thành</span>';
                 });
             }
         }
