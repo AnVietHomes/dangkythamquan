@@ -40,7 +40,6 @@
         .form-container { background: var(--card-bg); max-width: 800px; margin: 20px auto 50px; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); width: 90%; }
         .form-title { text-align: center; font-weight: 800; font-size: 24px; text-transform: uppercase; margin-bottom: 30px; color: var(--header-text);}
         
-        /* FLEXBOX ĐỂ ÉP CÙNG 1 DÒNG */
         .row-item { display: flex; align-items: flex-end; margin-bottom: 25px; flex-wrap: nowrap; gap: 15px;}
         .label-col { width: 35%; font-weight: 600; padding-bottom: 8px; flex-shrink: 0;}
         .input-col { width: 65%; flex-grow: 1;}
@@ -51,7 +50,6 @@
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(var(--icon-invert, 0)); cursor: pointer; }
         [data-theme="dark"] { --icon-invert: 1; }
         
-        /* ĐỊNH DẠNG Ô CHỌN THỜI GIAN KÉP */
         .time-date-group { display: flex; align-items: center; gap: 10px; width: 100%; }
         .time-date-group .time-input { width: 80px; text-align: center; font-weight: 700; flex-shrink: 0;}
         .time-date-group .date-input { flex-grow: 1; min-width: 120px; }
@@ -93,7 +91,6 @@
     <div class="form-container">
         <div class="form-title">ĐĂNG KÝ THAM QUAN DỰ ÁN</div>
         <form id="bookingForm">
-            <!-- Khối thời gian đã ép trên 1 dòng -->
             <div class="row-item">
                 <div class="label-col">Thời gian tham quan:</div>
                 <div class="input-col time-date-group">
@@ -122,6 +119,7 @@
     </div>
 
     <script>
+        // Xử lý Dark/Light Mode
         document.getElementById('themeToggle').addEventListener('change', function() {
             const html = document.documentElement;
             const logo = document.getElementById('mainLogo');
@@ -129,6 +127,16 @@
             else { html.setAttribute('data-theme', 'light'); if (logo) logo.src = 'logo.svg'; }
         });
 
+        // --- TÍNH NĂNG TỰ ĐỘNG ĐIỀN (FILL) THÔNG TIN ĐÃ LƯU TỪ TRƯỚC ---
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('avh_name')) document.getElementById('name').value = localStorage.getItem('avh_name');
+            if (localStorage.getItem('avh_dept')) document.getElementById('department').value = localStorage.getItem('avh_dept');
+            if (localStorage.getItem('avh_phone')) document.getElementById('phone').value = localStorage.getItem('avh_phone');
+            if (localStorage.getItem('avh_cccd')) document.getElementById('cccd').value = localStorage.getItem('avh_cccd');
+            if (localStorage.getItem('avh_plate')) document.getElementById('plate').value = localStorage.getItem('avh_plate');
+        });
+
+        // Xử lý định dạng giờ 24h
         const timeInput = document.getElementById('visitTime');
         timeInput.addEventListener('input', function(e) {
             let val = this.value.replace(/\D/g, ''); 
@@ -152,6 +160,19 @@
             const btn = document.getElementById('btnSubmit');
             btn.innerText = "ĐANG GỬI..."; btn.disabled = true;
 
+            // Lấy giá trị thông tin cá nhân để ghi nhớ vào localStorage
+            const nameVal = document.getElementById('name').value;
+            const deptVal = document.getElementById('department').value;
+            const phoneVal = document.getElementById('phone').value;
+            const cccdVal = document.getElementById('cccd').value;
+            const plateVal = document.getElementById('plate').value;
+
+            localStorage.setItem('avh_name', nameVal);
+            localStorage.setItem('avh_dept', deptVal);
+            localStorage.setItem('avh_phone', phoneVal);
+            localStorage.setItem('avh_cccd', cccdVal);
+            localStorage.setItem('avh_plate', plateVal);
+
             const visitTimeStr = document.getElementById('visitTime').value; 
             const visitDateStr = document.getElementById('visitDate').value; 
             
@@ -168,13 +189,13 @@
 
             const formData = new URLSearchParams();
             formData.append('thoiGianThamQuan', formattedTimeVisit);
-            formData.append('phongKinhDoanh', document.getElementById('department').value);
-            formData.append('tenNVKD', document.getElementById('name').value);
-            formData.append('sdt', document.getElementById('phone').value);
-            formData.append('cccd', document.getElementById('cccd').value);
+            formData.append('phongKinhDoanh', deptVal);
+            formData.append('tenNVKD', nameVal);
+            formData.append('sdt', phoneVal);
+            formData.append('cccd', cccdVal);
             formData.append('slKhach', document.getElementById('guestCount').value);
             formData.append('tongNguoi', document.getElementById('totalCount').value);
-            formData.append('bienSo', document.getElementById('plate').value);
+            formData.append('bienSo', plateVal);
             formData.append('mucDich', purposes.join(", "));
             formData.append('isLate', isLate);
 
@@ -184,7 +205,21 @@
             .then(res => res.json())
             .then(data => {
                 alert("Đăng ký tham quan thành công!");
-                document.getElementById('bookingForm').reset();
+                
+                // Reset chỉ các ô số lượng, thời gian, mục đích. Giữ lại thông tin cá nhân đã lưu trong localStorage và fill lại vào ô.
+                document.getElementById('visitTime').value = '';
+                document.getElementById('visitDate').value = '';
+                document.getElementById('guestCount').value = '';
+                document.getElementById('totalCount').value = '';
+                document.querySelectorAll('.purpose').forEach(cb => cb.checked = false);
+                
+                // Tải lại các trường đã nhớ lên form để Sale thấy ngay lập tức
+                document.getElementById('name').value = localStorage.getItem('avh_name') || '';
+                document.getElementById('department').value = localStorage.getItem('avh_dept') || '';
+                document.getElementById('phone').value = localStorage.getItem('avh_phone') || '';
+                document.getElementById('cccd').value = localStorage.getItem('avh_cccd') || '';
+                document.getElementById('plate').value = localStorage.getItem('avh_plate') || '';
+
                 btn.innerText = "GỬI ĐĂNG KÝ"; btn.disabled = false;
             }).catch(err => { 
                 alert("Lỗi mạng, vui lòng thử lại!"); 
